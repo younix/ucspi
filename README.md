@@ -2,7 +2,7 @@
 
 UNIX Client/Server Program Interface
 
-== socks
+## socks
 
 socks is an ucpi socks client.
 
