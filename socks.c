@@ -162,17 +162,15 @@ main(int argc, char *argv[], char *envp[])
 		perror(rep_mesg(reply.cmd));
 
 	/* read the bind address of the reply */
-	switch (reply.atyp) {
-	case IPv6:
+	if (reply.atyp == IPv6) {
 		read(READ_FD, &reply.addr.ip6, sizeof reply.addr.ip6);
-		break;
-	case IPv4:
+	} else if (reply.atyp == IPv4) {
 		read(READ_FD, &reply.addr.ip4, sizeof reply.addr.ip4);
-		break;
-	case BIND:
+	} else if (reply.atyp ==  BIND) {
 		read(READ_FD, &reply.addr.name.len, sizeof reply.addr.name.len);
 		read(READ_FD, &reply.addr.name.str, reply.addr.name.len);
-		break;
+	} else {
+		perror("unknown address type in reply");
 	}
 
 	/* read the port of the replay */
