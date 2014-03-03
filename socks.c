@@ -42,8 +42,6 @@ struct nego_ans {
 	uint8_t method;
 };
 
-#define MAX_REQUEST_LEN 262
-
 struct request {
 	uint8_t  ver;
 	uint8_t  cmd;
@@ -139,10 +137,8 @@ main(int argc, char *argv[], char *envp[])
 		perror("No acceptable authentication methods");
 
 	/* socks: request for connection */
-	fprintf(stderr, "write request header\n");
 	write(WRITE_FD, &request, 4);
 
-	fprintf(stderr, "write request address\n");
 	if (request.atyp == IPv6) {
 		write(WRITE_FD, &(request.addr.ip6), 16);
 	} else if (request.atyp == IPv4) {
@@ -157,18 +153,15 @@ main(int argc, char *argv[], char *envp[])
 	}
 
 	/* socks: send requested port */
-	fprintf(stderr, "write request port\n");
 	write(WRITE_FD, &request.port, sizeof request.port);
 
 	/* socks: start analysing reply */
-	fprintf(stderr, "read reply head\n");
 	read(READ_FD, &reply, 4);
 
 	if (reply.cmd != 0)
 		perror(rep_mesg(reply.cmd));
 
 	/* read the bind address of the reply */
-	fprintf(stderr, "read reply address\n");
 	switch (reply.atyp) {
 	case IPv6:
 		read(READ_FD, &reply.addr.ip6, sizeof reply.addr.ip6);
@@ -183,12 +176,10 @@ main(int argc, char *argv[], char *envp[])
 	}
 
 	/* read the port of the replay */
-	fprintf(stderr, "read reply port\n");
 	read(READ_FD, &reply.port, sizeof reply.port);
 	reply.port = ntohs(request.port);
 
 	/* start client program */
-	fprintf(stderr, "start client\n");
 	execve(prog, argv, envp);
 	perror(NULL);
 
