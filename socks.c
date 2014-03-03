@@ -34,7 +34,11 @@
 struct nego {
 	uint8_t ver;
 	uint8_t nmethods;
+<<<<<<< HEAD
 	uint8_t method;
+=======
+	uint8_t *method;
+>>>>>>> 077a708800fa769a9a0d930514df70e290c5254d
 };
 
 struct nego_ans {
@@ -90,8 +94,13 @@ usage(void)
 int
 main(int argc, char *argv[], char *envp[])
 {
+<<<<<<< HEAD
 	struct nego nego = {SOCKSv5, 1, NO_AUTH};
 	struct nego_ans nego_ans = {0, 0};
+=======
+	struct nego nego = {SOCKSv5, 0x01, NO_AUTH};
+	struct nego_ans nego_ans;
+>>>>>>> 077a708800fa769a9a0d930514df70e290c5254d
 	struct request request = {SOCKSv5, CMD_CONNECT, RSV, 0, {{0}}, 0};
 	struct request reply = {SOCKSv5, 0, RSV, 0, {{0}}, 0};
 	int ch;
@@ -113,6 +122,7 @@ main(int argc, char *argv[], char *envp[])
 	char *host = argv[0];// argv++; argc--;
 	char *port = argv[1];// argv++; argc--;
 	char *prog = argv[2];// argv++; argc--;
+<<<<<<< HEAD
 
 	if (strlen(host) > 255)
 		perror("hostname is too long");
@@ -131,6 +141,26 @@ main(int argc, char *argv[], char *envp[])
 	if ((request.port = htons(strtol(port, NULL, 0))) == 0)
 		perror(NULL);
 
+=======
+
+	if (strlen(host) > 255)
+		perror("hostname is too long");
+
+	/* parsing address argument */
+	if (inet_pton(AF_INET6, host, &request.addr.ip6) == 1)
+		request.atyp = IPv6;
+	else if (inet_pton(AF_INET, host, &request.addr.ip4) == 1)
+		request.atyp = IPv4;
+	else if ((memcpy(request.addr.name.str, host, strlen(host))) != NULL)
+		request.atyp = BIND;
+	else
+		perror("could not handle address");
+
+	/* parsing port number */
+	if ((request.port = htons(strtol(port, NULL, 0))) == 0)
+		perror(NULL);
+
+>>>>>>> 077a708800fa769a9a0d930514df70e290c5254d
 	/* socks: start negotiation */
 	write(WRITE_FD, &nego, sizeof nego);
 	read(READ_FD, &nego_ans, sizeof nego_ans);
@@ -139,10 +169,15 @@ main(int argc, char *argv[], char *envp[])
 		perror("No acceptable authentication methods");
 
 	/* socks: request for connection */
+<<<<<<< HEAD
 	fprintf(stderr, "write request header\n");
 	write(WRITE_FD, &request, 4);
 
 	fprintf(stderr, "write request address\n");
+=======
+	write(WRITE_FD, &request, 4);
+
+>>>>>>> 077a708800fa769a9a0d930514df70e290c5254d
 	if (request.atyp == IPv6) {
 		write(WRITE_FD, &(request.addr.ip6), 16);
 	} else if (request.atyp == IPv4) {
@@ -157,18 +192,27 @@ main(int argc, char *argv[], char *envp[])
 	}
 
 	/* socks: send requested port */
+<<<<<<< HEAD
 	fprintf(stderr, "write request port\n");
 	write(WRITE_FD, &request.port, sizeof request.port);
 
 	/* socks: start analysing reply */
 	fprintf(stderr, "read reply head\n");
+=======
+	write(WRITE_FD, &request.port, sizeof request.port);
+
+	/* socks: start analysing reply */
+>>>>>>> 077a708800fa769a9a0d930514df70e290c5254d
 	read(READ_FD, &reply, 4);
 
 	if (reply.cmd != 0)
 		perror(rep_mesg(reply.cmd));
 
 	/* read the bind address of the reply */
+<<<<<<< HEAD
 	fprintf(stderr, "read reply address\n");
+=======
+>>>>>>> 077a708800fa769a9a0d930514df70e290c5254d
 	switch (reply.atyp) {
 	case IPv6:
 		read(READ_FD, &reply.addr.ip6, sizeof reply.addr.ip6);
@@ -183,12 +227,18 @@ main(int argc, char *argv[], char *envp[])
 	}
 
 	/* read the port of the replay */
+<<<<<<< HEAD
 	fprintf(stderr, "read reply port\n");
+=======
+>>>>>>> 077a708800fa769a9a0d930514df70e290c5254d
 	read(READ_FD, &reply.port, sizeof reply.port);
 	reply.port = ntohs(request.port);
 
 	/* start client program */
+<<<<<<< HEAD
 	fprintf(stderr, "start client\n");
+=======
+>>>>>>> 077a708800fa769a9a0d930514df70e290c5254d
 	execve(prog, argv, envp);
 	perror(NULL);
 
