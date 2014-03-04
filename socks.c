@@ -108,9 +108,9 @@ main(int argc, char *argv[], char *envp[])
 	if (argc < 3)
 		usage();
 
-	char *host = argv[0];// argv++; argc--;
-	char *port = argv[1];// argv++; argc--;
-	char *prog = argv[2];// argv++; argc--;
+	char *host = *argv; argv++; argc--;
+	char *port = *argv; argv++; argc--;
+	char *prog = *argv; /* argv[0] == program name */
 
 	if (strlen(host) > 255)
 		perror("hostname is too long");
