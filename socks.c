@@ -7,6 +7,9 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
+/* enviroment */
+char **environ;
+
 /* uscpi */
 #define WRITE_FD 6
 #define READ_FD 7
@@ -92,7 +95,10 @@ main(int argc, char *argv[], char *envp[])
 	struct nego_ans nego_ans = {0, 0};
 	struct request request = {SOCKSv5, CMD_CONNECT, RSV, 0, {{0}}, 0};
 	struct request reply = {SOCKSv5, 0, RSV, 0, {{0}}, 0};
-	int ch;
+	int ch, af = AF_INET6;
+
+	environ = envp;
+//	environ = NULL;
 
 	while ((ch = getopt(argc, argv, "u:p:")) != -1) {
 		switch (ch) {
@@ -116,14 +122,18 @@ main(int argc, char *argv[], char *envp[])
 		perror("hostname is too long");
 
 	/* parsing address argument */
-	if (inet_pton(AF_INET6, host, &request.addr.ip6) == 1)
+	if (inet_pton(AF_INET6, host, &request.addr.ip6) == 1) {
+		af = AF_INET6;
 		request.atyp = IPv6;
-	else if (inet_pton(AF_INET, host, &request.addr.ip4) == 1)
+	} else if (inet_pton(AF_INET, host, &request.addr.ip4) == 1) {
+		af = AF_INET;
 		request.atyp = IPv4;
-	else if ((memcpy(request.addr.name.str, host, strlen(host))) != NULL)
+	} else if ((memcpy(request.addr.name.str, host, strlen(host))) != NULL){
+		af = AF_INET;
 		request.atyp = BIND;
-	else
+	} else {
 		perror("could not handle address");
+	}
 
 	/* parsing port number */
 	if ((request.port = htons(strtol(port, NULL, 0))) == 0)
@@ -163,6 +173,7 @@ main(int argc, char *argv[], char *envp[])
 
 	/* read the bind address of the reply */
 	if (reply.atyp == IPv6) {
+		af = AF_INET6;
 		read(READ_FD, &reply.addr.ip6, sizeof reply.addr.ip6);
 	} else if (reply.atyp == IPv4) {
 		read(READ_FD, &reply.addr.ip4, sizeof reply.addr.ip4);
@@ -177,8 +188,26 @@ main(int argc, char *argv[], char *envp[])
 	read(READ_FD, &reply.port, sizeof reply.port);
 	reply.port = ntohs(request.port);
 
+	/* set ucspi enviroment variables */
+	char tmp[BUFSIZ];
+
+	setenv("SOCKSREMOTEIP", getenv("TCPREMOTEIP"), 1);
+	setenv("SOCKSREMOTEPORT", getenv("TCPREMOTEPORT"), 1);
+	setenv("SOCKSLOCALIP", getenv("TCPLOCALIP"), 1);
+	setenv("SOCKSLOCALPORT", getenv("TCPLOCALPORT"), 1);
+
+	inet_ntop(af, &request.addr, tmp, sizeof tmp);
+	setenv("TCPREMOTEIP", tmp, 1);
+	snprintf(tmp, sizeof tmp, "%d", request.port);
+	setenv("TCPREMOTEPORT", tmp, 1);
+
+	inet_ntop(af, &reply.addr, tmp, sizeof tmp);
+	setenv("TCPLOCALIP", tmp, 1);
+	snprintf(tmp, sizeof tmp, "%d", reply.port);
+	setenv("TCPRLOCALPORT", tmp, 1);
+
 	/* start client program */
-	execve(prog, argv, envp);
+	execve(prog, argv, environ);
 	perror(NULL);
 
 	return EXIT_FAILURE;
