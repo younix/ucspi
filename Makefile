@@ -1,13 +1,17 @@
 CC=gcc
 CFLAGS=-std=c99 -pedantic -Wall -Wextra -g ${GNU} ${BSD}
 
-all: socks
+all: socks tcpclient
 
 socks: socks.o
 	${CC} -o $@ socks.o
 
+tcpclient: tcpclient.o
+	${CC} -o $@ tcpclient.o
+
 clean:
-	rm -f socks *.core *.o
+	rm -f *.core *.o
+	rm -f obj/*
 
 .SUFFIXES: .c .o
 .c.o:
