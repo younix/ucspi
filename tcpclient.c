@@ -1,6 +1,7 @@
 #include <err.h>
 #include <errno.h>
 #include <netdb.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,9 +55,7 @@ main(int argc, char*argv[], char *envp[])
 	argc -= optind;
 	argv += optind;
 
-	if (argc < 3)
-		usage();
-
+	if (argc < 3) usage();
 	char *host = *argv; argv++; argc--;
 	char *port = *argv; argv++; argc--;
 	char *prog = *argv;
@@ -81,8 +80,7 @@ main(int argc, char*argv[], char *envp[])
 		}
 		break;  /* okay we got one */
 	}
-	if (s == -1)
-		goto err;
+	if (s == -1) goto err;
 	freeaddrinfo(res0);
 
 //TODO: set ucspi variables
@@ -91,53 +89,54 @@ main(int argc, char*argv[], char *envp[])
 	int po[2];
 	if (pipe(pi) < 0) goto err;
 	if (pipe(po) < 0) goto err;
-	int wfd = po[1];
 	int rfd = pi[0];
-
-	switch (fork()) {
+	int wfd = po[1];
+	int prog_pid = fork();
+	switch (prog_pid) {
 	case 0:
 		/* start client program */
 		if (dup2(pi[1], 6) < 0) goto err;
 		if (dup2(po[0], 7) < 0) goto err;
+//		if (close(rfd) < 0) goto err;
+//		if (close(wfd) < 0) goto err;
 		execve(prog, argv, environ);
 	case -1:
 		goto err;
 	}
+
+	if (close(pi[1]) < 0) goto err;
+	if (close(po[0]) < 0) goto err;
 
 	char buf[BUFSIZ];
 	ssize_t len = 0;
 	fd_set readfds;
 	int max = 0;
 
-	FD_ZERO(&readfds);
-
-	fprintf(stderr, "s: %d\n", s);
-
-	FD_SET(s, &readfds);
-	if (max < s) max = s;
-
-	FD_SET(rfd, &readfds);
-	if (max < rfd) max = rfd;
-
 	fprintf(stderr, "start select\n");
-	while (select(max+1, &readfds, NULL, NULL, NULL) >= 0) {
+	for (;;) {
+		FD_ZERO(&readfds);
+		FD_SET(s, &readfds);
+		if (max < s) max = s;
+		FD_SET(rfd, &readfds);
+		if (max < rfd) max = rfd;
+
+		if (select(max+1, &readfds, NULL, NULL, NULL) < 0) goto err;
+		fprintf(stderr, "selected\n");
+
 		if (FD_ISSET(s, &readfds)) {
 			fprintf(stderr, "read from socket\n");
-			if ((len = read(s, buf, sizeof buf)) < 0)
-				goto err;
-			if ((write(wfd, buf, len)) < 0)
-				goto err;
+			if ((len = read(s, buf, sizeof buf)) < 0) goto err;
+			if (len == 0) { /* connection was closed */
+				kill(prog_pid, SIGHUP);
+				return EXIT_SUCCESS;
+			}
+			if ((write(wfd, buf, len)) < len) goto err;
 		}
 		if (FD_ISSET(rfd, &readfds)) {
 			fprintf(stderr, "read from program\n");
-			if ((len = read(rfd, buf, sizeof buf)) < 0)
-				goto err;
-			fprintf(stderr, "write to socket: %zd\n", len);
-			if ((len = write(s, buf, len)) < 0)
-				goto err;
-			fprintf(stderr, "written: %zd\n", len);
+			if ((len = read(rfd, buf, sizeof buf)) < 0) goto err;
+			if ((len = write(s, buf, len)) < len) goto err;
 		}
-		fprintf(stderr, "end of select\n");
 	}
 
  err:
