@@ -34,6 +34,11 @@ char **environ;
 #define CMD_BIND    0x02 /* not supported */
 #define CMD_UDP_ASS 0x03 /* not supported */
 
+#define WRITE(fd, ptr, len) do {				\
+		if (write((fd), (ptr), (len)) < (len))		\
+			goto err;				\
+	} while(0);
+
 struct nego {
 	uint8_t ver;
 	uint8_t nmethods;
@@ -98,8 +103,6 @@ main(int argc, char *argv[], char *envp[])
 	int ch, af = AF_INET6;
 
 	environ = envp;
-//	environ = NULL;
-
 	while ((ch = getopt(argc, argv, "u:p:")) != -1) {
 		switch (ch) {
 		case 'h':
@@ -111,9 +114,7 @@ main(int argc, char *argv[], char *envp[])
 	argc -= optind;
 	argv += optind;
 
-	if (argc < 3)
-		usage();
-
+	if (argc < 3) usage();
 	char *host = *argv; argv++; argc--;
 	char *port = *argv; argv++; argc--;
 	char *prog = *argv; /* argv[0] == program name */
@@ -136,18 +137,17 @@ main(int argc, char *argv[], char *envp[])
 	}
 
 	/* parsing port number */
-	if ((request.port = htons(strtol(port, NULL, 0))) == 0)
-		perror(NULL);
+	if ((request.port = htons(strtol(port, NULL, 0))) == 0) goto err;
 
 	/* socks: start negotiation */
-	write(WRITE_FD, &nego, sizeof nego);
-	read(READ_FD, &nego_ans, sizeof nego_ans);
+	if (write(WRITE_FD, &nego, sizeof nego) < 0) goto err;
+	if (read(READ_FD, &nego_ans, sizeof nego_ans) < 0) goto err;
 
 	if (nego_ans.method == NOT_ACC)
 		perror("No acceptable authentication methods");
 
 	/* socks: request for connection */
-	write(WRITE_FD, &request, 4);
+	if (write(WRITE_FD, &request, 4) < 0) goto err;
 
 	if (request.atyp == IPv6) {
 		write(WRITE_FD, &(request.addr.ip6), 16);
@@ -163,10 +163,10 @@ main(int argc, char *argv[], char *envp[])
 	}
 
 	/* socks: send requested port */
-	write(WRITE_FD, &request.port, sizeof request.port);
+	if (write(WRITE_FD, &request.port, sizeof request.port) < 0) goto err;
 
 	/* socks: start analysing reply */
-	read(READ_FD, &reply, 4);
+	if (read(READ_FD, &reply, 4) < 0) goto err;
 
 	if (reply.cmd != 0)
 		perror(rep_mesg(reply.cmd));
@@ -208,7 +208,8 @@ main(int argc, char *argv[], char *envp[])
 
 	/* start client program */
 	execve(prog, argv, environ);
-	perror(NULL);
 
+ err:
+	perror("socks");
 	return EXIT_FAILURE;
 }
