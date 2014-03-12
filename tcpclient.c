@@ -135,7 +135,7 @@ main(int argc, char*argv[], char *envp[])
 		if (FD_ISSET(rfd, &readfds)) {
 			fprintf(stderr, "read from program\n");
 			if ((len = read(rfd, buf, sizeof buf)) < 0) goto err;
-			if ((len = write(s, buf, len)) < len) goto err;
+			if (write(s, buf, len) < len) goto err;
 		}
 	}
 
