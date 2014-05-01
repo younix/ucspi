@@ -1,4 +1,4 @@
-CC=gcc
+CC ?= cc
 CFLAGS=-std=c99 -pedantic -Wall -Wextra -g ${GNU} ${BSD}
 
 all: socks tcpclient
