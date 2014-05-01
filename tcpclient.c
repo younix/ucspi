@@ -45,7 +45,6 @@ main(int argc, char*argv[], char *envp[])
 	int save_errno;
 	int s;
 	int ch;
-	int af = AF_INET6;
 	const char *cause = NULL;
 	environ = envp;
 
@@ -58,10 +57,10 @@ main(int argc, char*argv[], char *envp[])
 	while ((ch = getopt(argc, argv, "bf:")) != -1) {
 		switch (ch) {
 		case '4':
-			af = AF_INET;
+			hints.ai_family = AF_INET;
 			break;
 		case '6':
-			af = AF_INET6;
+			hints.ai_family = AF_INET6;
 			break;
 		default:
 			usage();
