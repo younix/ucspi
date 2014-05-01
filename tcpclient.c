@@ -155,6 +155,6 @@ main(int argc, char*argv[], char *envp[])
 	}
 
  err:
-	perror("tcpclient");
+	perror(cause);
 	return EXIT_FAILURE;
 }
