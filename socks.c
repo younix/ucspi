@@ -189,13 +189,19 @@ main(int argc, char *argv[], char *envp[])
 	reply.port = ntohs(request.port);
 
 	/* set ucspi enviroment variables */
+	char *tcp_remote_ip   = getenv("TCPREMOTEIP");
+	char *tcp_remote_port = getenv("TCPREMOTEPORT");
+	char *tcp_remote_host = getenv("TCPREMOTEHOST");
+	char *tcp_local_ip    = getenv("TCPLOCALIP");
+	char *tcp_local_port  = getenv("TCPLOCALIP");
+
+	if (tcp_remote_ip   != NULL)setenv("SOCKSREMOTEIP"  ,tcp_remote_ip  ,1);
+	if (tcp_remote_port != NULL)setenv("SOCKSREMOTEPORT",tcp_remote_port,1);
+	if (tcp_remote_host != NULL)setenv("SOCKSREMOTEHOST",tcp_remote_host,1);
+	if (tcp_local_ip    != NULL)setenv("SOCKSLOCALIP"   ,tcp_local_ip   ,1);
+	if (tcp_local_port  != NULL)setenv("SOCKSLOCALPORT" ,tcp_local_port ,1);
+
 	char tmp[BUFSIZ];
-
-	setenv("SOCKSREMOTEIP", getenv("TCPREMOTEIP"), 1);
-	setenv("SOCKSREMOTEPORT", getenv("TCPREMOTEPORT"), 1);
-	setenv("SOCKSLOCALIP", getenv("TCPLOCALIP"), 1);
-	setenv("SOCKSLOCALPORT", getenv("TCPLOCALPORT"), 1);
-
 	inet_ntop(af, &request.addr, tmp, sizeof tmp);
 	setenv("TCPREMOTEIP", tmp, 1);
 	snprintf(tmp, sizeof tmp, "%d", request.port);
@@ -204,7 +210,7 @@ main(int argc, char *argv[], char *envp[])
 	inet_ntop(af, &reply.addr, tmp, sizeof tmp);
 	setenv("TCPLOCALIP", tmp, 1);
 	snprintf(tmp, sizeof tmp, "%d", reply.port);
-	setenv("TCPRLOCALPORT", tmp, 1);
+	setenv("TCPLOCALPORT", tmp, 1);
 
 	/* start client program */
 	execve(prog, argv, environ);

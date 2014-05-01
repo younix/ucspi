@@ -97,8 +97,8 @@ main(int argc, char*argv[], char *envp[])
 		/* start client program */
 		if (dup2(pi[1], 6) < 0) goto err;
 		if (dup2(po[0], 7) < 0) goto err;
-//		if (close(rfd) < 0) goto err;
-//		if (close(wfd) < 0) goto err;
+		if (close(rfd) < 0) goto err;
+		if (close(wfd) < 0) goto err;
 		execve(prog, argv, environ);
 	case -1:
 		goto err;
