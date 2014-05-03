@@ -33,7 +33,7 @@ char **environ;
 void
 usage(void)
 {
-	fprintf(stderr, "tcpclient [-46] HOST PORT PROG\n");
+	fprintf(stderr, "tcpclient [-4|6] HOST PORT PROG\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -54,12 +54,16 @@ main(int argc, char*argv[], char *envp[])
 	hints.ai_socktype = SOCK_STREAM;
 
 	/* parsing command line arguments */
-	while ((ch = getopt(argc, argv, "bf:")) != -1) {
+	while ((ch = getopt(argc, argv, "46")) != -1) {
 		switch (ch) {
 		case '4':
+			if (hints.ai_family == AF_INET6)
+				usage();
 			hints.ai_family = AF_INET;
 			break;
 		case '6':
+			if (hints.ai_family == AF_INET)
+				usage();
 			hints.ai_family = AF_INET6;
 			break;
 		default:
