@@ -103,28 +103,43 @@ main(int argc, char*argv[], char *envp[])
 	freeaddrinfo(res0);
 
 //TODO: set ucspi variables
-
+#	define PIPE_READ 0
+#	define PIPE_WRITE 1
 	int pi[2];
 	int po[2];
 	if (pipe(pi) < 0) goto err;
 	if (pipe(po) < 0) goto err;
-	int rfd = pi[0];
-	int wfd = po[1];
+
 	int prog_pid = fork();
 	switch (prog_pid) {
-	case 0:
-		/* start client program */
-		if (dup2(pi[1], 6) < 0) goto err;
-		if (dup2(po[0], 7) < 0) goto err;
-		if (close(rfd) < 0) goto err;
-		if (close(wfd) < 0) goto err;
+	case 0:	/* start client program */
+
+		if (close(pi[PIPE_READ]) < 0) goto err;
+		if (close(po[PIPE_WRITE]) < 0) goto err;
+
+		/*
+		 * We have to move one descriptor cause po[] may overlaps with
+		 * descriptor 6 and 7.
+		 */
+		int po_read = 0;
+		if ((po_read = dup(po[PIPE_READ])) < 0) goto err;
+		if (close(po[PIPE_READ]) < 0) goto err;
+
+		if (dup2(pi[PIPE_WRITE], 6) < 0) goto err;
+		if (dup2(po_read, 7) < 0) goto err;
+
+		if (close(pi[PIPE_WRITE]) < 0) goto err;
+		if (close(po_read) < 0) goto err;
 		execve(prog, argv, environ);
 	case -1:
 		goto err;
 	}
 
-	if (close(pi[1]) < 0) goto err;
-	if (close(po[0]) < 0) goto err;
+	if (close(pi[PIPE_WRITE]) < 0) goto err;
+	if (close(po[PIPE_READ]) < 0) goto err;
+
+	int rfd = pi[PIPE_READ];
+	int wfd = po[PIPE_WRITE];
 
 	char buf[BUFSIZ];
 	ssize_t len = 0;
@@ -135,7 +150,7 @@ main(int argc, char*argv[], char *envp[])
 	for (;;) {
 		FD_ZERO(&readfds);
 		FD_SET(s, &readfds);
-		if (max < s) max = s;
+		max = s;
 		FD_SET(rfd, &readfds);
 		if (max < rfd) max = rfd;
 
@@ -144,9 +159,8 @@ main(int argc, char*argv[], char *envp[])
 
 		if (FD_ISSET(s, &readfds)) {
 			fprintf(stderr, "read from socket\n");
-			if ((len = read(s, buf, sizeof buf)) < 0) goto err;
+			if ((len = recv(s, buf, sizeof buf, 0)) < 0) goto err;
 			if (len == 0) { /* connection was closed */
-				kill(prog_pid, SIGHUP);
 				return EXIT_SUCCESS;
 			}
 			if ((write(wfd, buf, len)) < len) goto err;
@@ -154,7 +168,9 @@ main(int argc, char*argv[], char *envp[])
 		if (FD_ISSET(rfd, &readfds)) {
 			fprintf(stderr, "read from program\n");
 			if ((len = read(rfd, buf, sizeof buf)) < 0) goto err;
-			if (write(s, buf, len) < len) goto err;
+			if (len == 0)
+				err(EXIT_FAILURE, "pipe closed\n");
+			if (send(s, buf, len, 0) < len) goto err;
 		}
 	}
 
