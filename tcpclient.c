@@ -33,7 +33,7 @@ char **environ;
 void
 usage(void)
 {
-	fprintf(stderr, "tcpclient [-4|6] HOST PORT PROG\n");
+	fprintf(stderr, "tcpclient [-4|6] HOST PORT PROGRAM [ARGS]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -146,7 +146,6 @@ main(int argc, char*argv[], char *envp[])
 	fd_set readfds;
 	int max = 0;
 
-	fprintf(stderr, "start select\n");
 	for (;;) {
 		FD_ZERO(&readfds);
 		FD_SET(s, &readfds);
@@ -155,10 +154,8 @@ main(int argc, char*argv[], char *envp[])
 		if (max < rfd) max = rfd;
 
 		if (select(max+1, &readfds, NULL, NULL, NULL) < 0) goto err;
-		fprintf(stderr, "selected\n");
 
 		if (FD_ISSET(s, &readfds)) {
-			fprintf(stderr, "read from socket\n");
 			if ((len = recv(s, buf, sizeof buf, 0)) < 0) goto err;
 			if (len == 0) { /* connection was closed */
 				return EXIT_SUCCESS;
@@ -166,7 +163,6 @@ main(int argc, char*argv[], char *envp[])
 			if ((write(wfd, buf, len)) < len) goto err;
 		}
 		if (FD_ISSET(rfd, &readfds)) {
-			fprintf(stderr, "read from program\n");
 			if ((len = read(rfd, buf, sizeof buf)) < 0) goto err;
 			if (len == 0)
 				err(EXIT_FAILURE, "pipe closed\n");
