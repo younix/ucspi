@@ -28,25 +28,32 @@
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 #endif
 
+/* enviroment */
+char **environ;
+
 static void
 usage(void)
 {
 	fprintf(stderr, "sslc [-i IN] [-o OUT]\n");
+	fprintf(stderr, "sslc PROGRAM [ARGS]\n");
 	exit(EXIT_FAILURE);
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char *argv[], char *envp[])
 {
 	SSL *ssl = NULL;
 	SSL_CTX *ssl_ctx = NULL;
 	int ch, ret = 1;
+	environ = envp;
+
+	/* pipes to communicate with the front end */
 	int in = STDIN_FILENO;
 	int out = STDOUT_FILENO;
 
-	/* similar to UCSPI protocol */
-	int sin = 6;
-	int sout = 7;
+	/* pipes to communicate with the back end */
+	int sout = 6;
+	int sin = 7;
 
 	while ((ch = getopt(argc, argv, "i:o:")) != -1) {
 		switch (ch) {
@@ -66,6 +73,43 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
+	/* fork front end program */
+	if (argc > 0) {
+		char *prog = argv[0];
+#		define PIPE_READ 0
+#		define PIPE_WRITE 1
+		int pi[2];
+		int po[2];
+		if (pipe(pi) < 0) goto err;
+		if (pipe(po) < 0) goto err;
+		switch (fork()) {
+		case 0: /* start client program */
+			if (close(pi[PIPE_READ]) < 0) goto err;
+			if (close(po[PIPE_WRITE]) < 0) goto err;
+
+			/*
+			 * We have to move one descriptor cause po[] may
+			 * overlaps with descriptor 6 and 7.
+			 */
+			int po_read = 0;
+			if ((po_read = dup(po[PIPE_READ])) < 0) goto err;
+			if (close(po[PIPE_READ]) < 0) goto err;
+
+			if (dup2(pi[PIPE_WRITE], 6) < 0) goto err;
+			if (dup2(po_read, 7) < 0) goto err;
+
+			if (close(pi[PIPE_WRITE]) < 0) goto err;
+			if (close(po_read) < 0) goto err;
+			fprintf(stderr, "starting: %s\n", prog);
+			execve(prog, argv, environ);
+		case -1:
+			goto err;
+		}
+
+		in = pi[PIPE_READ];
+		out = po[PIPE_WRITE];
+	}
+
 	SSL_load_error_strings();
 	SSL_library_init();
 	if ((ssl_ctx = SSL_CTX_new(SSLv23_client_method())) == NULL) goto err;
@@ -74,6 +118,7 @@ main(int argc, char *argv[])
 	if (SSL_set_wfd(ssl, sout) == 0) goto err;
 	if ((ret = SSL_connect(ssl)) < 1) goto err;
 
+	fprintf(stderr, "select loop\n");
 	for (;;) {
 		char buf[BUFSIZ];
 		int n = 0;
@@ -83,6 +128,7 @@ main(int argc, char *argv[])
 		FD_SET(sin, &readfds);
 		int max_fd = MAX(in, sin);
 		select(max_fd+1, &readfds, NULL, NULL, NULL);
+		fprintf(stderr, "select(2)\n");
 
 		if (FD_ISSET(sin, &readfds)) {
 			if ((n = SSL_read(ssl, buf, BUFSIZ)) <= 0) goto err;
@@ -93,9 +139,12 @@ main(int argc, char *argv[])
 		}
 	}
  err:
+	if (ret != 1) {
+		fprintf(stderr, "check ssl error\n");
+		int e = SSL_get_error(ssl, ret);
+		fprintf(stderr, "ssl error: %d\n", e);
+		ERR_print_errors_fp(stderr);
+	}
 	perror(__func__);
-	if (ret != 1)
-		SSL_get_error(ssl, ret);
-	ERR_print_errors_fp(stderr);
 	return EXIT_FAILURE;
 }
