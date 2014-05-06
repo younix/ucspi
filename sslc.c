@@ -100,7 +100,6 @@ main(int argc, char *argv[], char *envp[])
 
 			if (close(pi[PIPE_WRITE]) < 0) goto err;
 			if (close(po_read) < 0) goto err;
-			fprintf(stderr, "starting: %s\n", prog);
 			execve(prog, argv, environ);
 		case -1:
 			goto err;
@@ -118,24 +117,26 @@ main(int argc, char *argv[], char *envp[])
 	if (SSL_set_wfd(ssl, sout) == 0) goto err;
 	if ((ret = SSL_connect(ssl)) < 1) goto err;
 
-	fprintf(stderr, "select loop\n");
 	for (;;) {
+		int e;
 		char buf[BUFSIZ];
-		int n = 0;
+		ssize_t n = 0;
 		fd_set readfds;
 		FD_ZERO(&readfds);
 		FD_SET(in, &readfds);
 		FD_SET(sin, &readfds);
 		int max_fd = MAX(in, sin);
-		select(max_fd+1, &readfds, NULL, NULL, NULL);
-		fprintf(stderr, "select(2)\n");
+		int sel = select(max_fd+1, &readfds, NULL, NULL, NULL);
 
 		if (FD_ISSET(sin, &readfds)) {
-			if ((n = SSL_read(ssl, buf, BUFSIZ)) <= 0) goto err;
+			do {
+				if ((n = SSL_read(ssl, buf, BUFSIZ)) <= 0) goto err;
+				e = SSL_get_error(ssl, n);
 				write(out, buf, n);
+			} while (e == SSL_ERROR_WANT_READ || n == sizeof buf);
 		} else if (FD_ISSET(in, &readfds)) {
-			if ((n = read(in, buf, BUFSIZ)) > 0)
-				SSL_write(ssl, buf, n);
+			if ((n = read(in, buf, BUFSIZ)) <= 0) goto err;
+			SSL_write(ssl, buf, n);
 		}
 	}
  err:
