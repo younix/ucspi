@@ -126,7 +126,7 @@ main(int argc, char *argv[], char *envp[])
 		FD_SET(in, &readfds);
 		FD_SET(sin, &readfds);
 		int max_fd = MAX(in, sin);
-		int sel = select(max_fd+1, &readfds, NULL, NULL, NULL);
+		if (select(max_fd+1, &readfds, NULL, NULL, NULL) == -1) goto err;
 
 		if (FD_ISSET(sin, &readfds)) {
 			do {
