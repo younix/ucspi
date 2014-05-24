@@ -1,0 +1,55 @@
+.Dd $Mdocdate$
+.Dt SOCKS 1
+.Sh NAME
+.Nm socks
+.Nd UCSPI socks proxy handler
+.Sh SYNOPSIS
+.Nm tcpclient
+.Ar proxy-host
+.Ar proxy-port
+.Nm socks
+.Ar host
+.Ar port
+.Ar program
+.Op arguments
+.Sh DESCRIPTION
+The
+.Nm
+utility is a socks proxy handler for a UCSPI execchain.
+It communicates with tcpclient over pipes with filedescriptor 6 and 7.
+tcpclient connects to the socks proxy and delegates the further protocol
+handling to
+.Nm socks .
+socks talks with the socks proxy and initiates a tcp connection to
+.Ar host
+with
+.Ar port .
+After connection initiation
+.Nm
+executes
+.Ar program
+with
+.Ar arguments .
+.Sh ENVIRONMENT
+.Bl -column
+.It PROTO
+.It TCPLOCALHOST
+.It TCPLOCALIP
+.It TCPLOCALPORT
+.It TCPREMOTEHOST
+.It TCPREMOTEIP
+.It TCPREMOTEPORT
+.El
+.\".Sh EXIT STATUS
+.\".Sh EXAMPLES
+.Sh SEE ALSO
+.Xr tcpclient 1 ,
+.Xr socks 1
+.Sh STANDARDS
+SOCKS version 5
+.Sh AUTHORS
+This program was written by Jan Klemkow.
+.\" .Sh CAVEATS
+.Sh SECURITY CONSIDERATIONS
+.Nm socks
+does NOT make any certificate checks.
