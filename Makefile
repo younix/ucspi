@@ -12,7 +12,7 @@ tcpclient: tcpclient.o
 	${CC} -static -o $@ tcpclient.o
 
 sslc: sslc.o
-	$(CC) -static -o sslc sslc.o $(LDFLAGS_SSL)
+	${CC} -static -o sslc sslc.o ${LDFLAGS_SSL}
 
 .c.o:
 	${CC} ${CFLAGS} -c $<

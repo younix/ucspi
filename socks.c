@@ -119,7 +119,7 @@ main(int argc, char *argv[], char *envp[])
 	int ch, af = AF_INET6;
 
 	environ = envp;
-	while ((ch = getopt(argc, argv, "u:p:")) != -1) {
+	while ((ch = getopt(argc, argv, "p:")) != -1) {
 		switch (ch) {
 		case 'h':
 		default:
@@ -230,7 +230,6 @@ main(int argc, char *argv[], char *envp[])
 
 	/* start client program */
 	execve(prog, argv, environ);
-
  err:
 	perror("socks");
 	return EXIT_FAILURE;
