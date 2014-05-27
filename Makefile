@@ -1,8 +1,7 @@
-CC ?= cc
-CFLAGS:=-std=c99 -pedantic -Wall -Wextra -g ${GNU} ${BSD}
-LSSL:=`pkg-config --libs libssl`
+include config.mk
 
 .PHONY: all clean install
+.SUFFIXES: .c .o
 
 all: socks tcpclient sslc
 
@@ -13,15 +12,24 @@ tcpclient: tcpclient.o
 	${CC} -static -o $@ tcpclient.o
 
 sslc: sslc.o
-	$(CC) -static -o sslc sslc.o $(LSSL)
+	$(CC) -static -o sslc sslc.o $(LDFLAGS_SSL)
 
-clean:
-	rm -f *.core *.o obj/* socks tcpclient sslc
-
-install: socks tcpclient sslc
-	mkdir -p ${HOME}/bin
-	cp socks tcpclient sslc ${HOME}/bin
-
-.SUFFIXES: .c .o
 .c.o:
 	${CC} ${CFLAGS} -c $<
+
+clean:
+	rm -rf *.core *.o obj/* socks tcpclient sslc ucspi-tools-*
+
+install: all
+	mkdir -p ${DESTDIR}${BINDIR}
+	mkdir -p ${DESTDIR}${MAN1DIR}
+	install -m 775 socks ${DESTDIR}${BINDIR}
+	install -m 775 sslc ${DESTDIR}${BINDIR}
+	install -m 444 socks.1 ${DESTDIR}${MAN1DIR}
+	install -m 444 sslc.1 ${DESTDIR}${MAN1DIR}
+
+dist: clean
+	mkdir -p ucspi-tools-${VERSION}
+	cp socks.c socks.1 sslc.c sslc.1 README.md config.mk Makefile \
+	    ucspi-tools-${VERSION}
+	tar czf ucspi-tools-${VERSION}.tar.gz ucspi-tools-${VERSION}
