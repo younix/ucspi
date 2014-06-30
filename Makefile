@@ -1,6 +1,6 @@
 include config.mk
 
-.PHONY: all clean install
+.PHONY: all clean install dist
 .SUFFIXES: .c .o
 
 all: socks tcpclient sslc
@@ -16,6 +16,9 @@ sslc: sslc.o
 
 .c.o:
 	${CC} ${CFLAGS} -c $<
+
+sslc.o: sslc.c
+	${CC} ${CFLAGS} -D CAFILE=${CAFILE} -D CAPATH=${CAPATH} -c sslc.c
 
 clean:
 	rm -rf *.core *.o obj/* socks tcpclient sslc ucspi-tools-*

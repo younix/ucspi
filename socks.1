@@ -6,8 +6,7 @@
 .Sh SYNOPSIS
 .Nm tcpclient
 .Ar proxy-host
-.Ar proxy-port
-.Nm socks
+.Ar proxy-port Nm socks
 .Ar host
 .Ar port
 .Ar program
@@ -31,14 +30,44 @@ executes
 with
 .Ar arguments .
 .Sh ENVIRONMENT
-.Bl -column
-.It PROTO
-.It TCPLOCALHOST
-.It TCPLOCALIP
-.It TCPLOCALPORT
-.It TCPREMOTEHOST
-.It TCPREMOTEIP
-.It TCPREMOTEPORT
+The following environment variables are defined in the UCPSI specification.
+By the usage of
+.Nm socks
+there are two TCP connections.
+One from the
+.Nm tcpclient
+to the socks proxy and an other from the socks proxy to the server.
+The
+.nm socks
+programm tries to handel this in a transparant way for the program.
+All variables which are set from tcpclient to describe the TCP connection
+between program and proxy are overwritten with the description of the TCP
+connection between proxy and server.
+Additionally variables are set to describe the connection between program
+and proxy.
+
+
+   SOCKSLOCAL   TCPLOCAL
+        |          |
+ program <--> proxy <--> server
+             |          |
+        SOCKSREMOTE  TCPREMOTE
+
+.Bl -tag -width Ds
+.It Ev PROTO
+Is set to TCP.
+.It Ev TCPLOCALHOST Ev TCPLOCALIP Ev TCPLOCALPORT
+These variables are set to the hostname, IP address and port number of the
+local socks proxy address.
+.It Ev TCPREMOTEHOST Ev TCPREMOTEIP Ev TCPREMOTEPORT
+These variables are set to the hostname, IP address and port number of the
+server.
+.It Ev SOCKSLOCALHOST Ev SOCKSLOCALIP Ev SOCKSLOCALPORT
+These variables are set to the hostname, IP address and port number of the
+tcpclient local side.
+.It Ev SOCKSREMOTEHOST Ev SOCKSREMOTEIP Ev SOCKSREMOTEPORT
+These variables are set to the hostname, IP address and port number of the
+socks proxy server side.
 .El
 .\".Sh EXIT STATUS
 .\".Sh EXAMPLES
@@ -46,7 +75,7 @@ with
 .Xr tcpclient 1 ,
 .Xr socks 1
 .Sh STANDARDS
-SOCKS version 5
+RFC 1928, SOCKS version 5
 .Sh AUTHORS
 This program was written by Jan Klemkow.
 .\" .Sh CAVEATS

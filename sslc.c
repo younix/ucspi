@@ -112,6 +112,11 @@ main(int argc, char *argv[], char *envp[])
 	SSL_load_error_strings();
 	SSL_library_init();
 	if ((ssl_ctx = SSL_CTX_new(SSLv23_client_method())) == NULL) goto err;
+
+	/* prepare certificate checking */
+	SSL_CTX_load_verify_locations(ssl_ctx, CAFILE, CAPATH);
+	SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, NULL);
+
 	if ((ssl = SSL_new(ssl_ctx)) == NULL) goto err;
 	if (SSL_set_rfd(ssl, sin) == 0) goto err;
 	if (SSL_set_wfd(ssl, sout) == 0) goto err;
