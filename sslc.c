@@ -34,8 +34,7 @@ char **environ;
 static void
 usage(void)
 {
-	fprintf(stderr, "sslc [-i IN] [-o OUT]\n");
-	fprintf(stderr, "sslc PROGRAM [ARGS]\n");
+	fprintf(stderr, "sslc [-h] [-f CAFILE] [-p CAPATH] PROGRAM [ARGS]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -55,16 +54,18 @@ main(int argc, char *argv[], char *envp[])
 	int sout = 6;
 	int sin = 7;
 
-	while ((ch = getopt(argc, argv, "i:o:")) != -1) {
+	char *ca_file = CAFILE;
+	char *ca_path = CAPATH;
+
+	while ((ch = getopt(argc, argv, "f:p:h")) != -1) {
 		switch (ch) {
-		case 'i':
-			in = strtol(optarg, NULL, 0);
-			if (errno != 0) goto err;
+		case 'f':
+			if ((ca_file = strdup(optarg)) == NULL) goto err;
 			break;
-		case 'o':
-			out = strtol(optarg, NULL, 0);
-			if (errno != 0) goto err;
+		case 'p':
+			if ((ca_path = strdup(optarg)) == NULL) goto err;
 			break;
+		case 'h':
 		default:
 			usage();
 			/* NOTREACHED */
@@ -73,48 +74,49 @@ main(int argc, char *argv[], char *envp[])
 	argc -= optind;
 	argv += optind;
 
+	if (argc < 1)
+		usage();
+
 	/* fork front end program */
-	if (argc > 0) {
-		char *prog = argv[0];
-#		define PIPE_READ 0
-#		define PIPE_WRITE 1
-		int pi[2];
-		int po[2];
-		if (pipe(pi) < 0) goto err;
-		if (pipe(po) < 0) goto err;
-		switch (fork()) {
-		case 0: /* start client program */
-			if (close(pi[PIPE_READ]) < 0) goto err;
-			if (close(po[PIPE_WRITE]) < 0) goto err;
+	char *prog = argv[0];
+#	define PIPE_READ 0
+#	define PIPE_WRITE 1
+	int pi[2];
+	int po[2];
+	if (pipe(pi) < 0) goto err;
+	if (pipe(po) < 0) goto err;
+	switch (fork()) {
+	case 0: /* start client program */
+		if (close(pi[PIPE_READ]) < 0) goto err;
+		if (close(po[PIPE_WRITE]) < 0) goto err;
 
-			/*
-			 * We have to move one descriptor cause po[] may
-			 * overlaps with descriptor 6 and 7.
-			 */
-			int po_read = 0;
-			if ((po_read = dup(po[PIPE_READ])) < 0) goto err;
-			if (close(po[PIPE_READ]) < 0) goto err;
+		/*
+		 * We have to move one descriptor cause po[] may
+		 * overlaps with descriptor 6 and 7.
+		 */
+		int po_read = 0;
+		if ((po_read = dup(po[PIPE_READ])) < 0) goto err;
+		if (close(po[PIPE_READ]) < 0) goto err;
 
-			if (dup2(pi[PIPE_WRITE], 6) < 0) goto err;
-			if (dup2(po_read, 7) < 0) goto err;
+		if (dup2(pi[PIPE_WRITE], 6) < 0) goto err;
+		if (dup2(po_read, 7) < 0) goto err;
 
-			if (close(pi[PIPE_WRITE]) < 0) goto err;
-			if (close(po_read) < 0) goto err;
-			execve(prog, argv, environ);
-		case -1:
-			goto err;
-		}
-
-		in = pi[PIPE_READ];
-		out = po[PIPE_WRITE];
+		if (close(pi[PIPE_WRITE]) < 0) goto err;
+		if (close(po_read) < 0) goto err;
+		execve(prog, argv, environ);
+	case -1:
+		goto err;
 	}
+
+	in = pi[PIPE_READ];
+	out = po[PIPE_WRITE];
 
 	SSL_load_error_strings();
 	SSL_library_init();
 	if ((ssl_ctx = SSL_CTX_new(SSLv23_client_method())) == NULL) goto err;
 
 	/* prepare certificate checking */
-	SSL_CTX_load_verify_locations(ssl_ctx, CAFILE, CAPATH);
+	SSL_CTX_load_verify_locations(ssl_ctx, ca_file, ca_path);
 	SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, NULL);
 
 	if ((ssl = SSL_new(ssl_ctx)) == NULL) goto err;
