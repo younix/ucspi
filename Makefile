@@ -3,11 +3,12 @@ include config.mk
 .PHONY: all clean install dist
 .SUFFIXES: .c .o
 
-all: socks tcpclient sslc
+all: socks sslc
 
 socks: socks.o
 	${CC} -static -o $@ socks.o
 
+# Just for some tests.  Don't use this.
 tcpclient: tcpclient.o
 	${CC} -static -o $@ tcpclient.o
 
