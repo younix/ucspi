@@ -105,7 +105,8 @@ rep_mesg(uint8_t rep)
 void
 usage(void)
 {
-	fprintf(stderr, "socks HOST PORT PROGRAM [PROGRAM ARGS...]\n");
+	fprintf(stderr, "tcpclient PROXY-HOST PROXY-PORT "
+			"socks HOST PORT PROGRAM [ARGS...]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -136,7 +137,7 @@ main(int argc, char *argv[], char *envp[])
 	char *prog = *argv; /* argv[0] == program name */
 
 	if (strlen(host) > 255)
-		perror("hostname is too long");
+		perror("socks: hostname is too long");
 
 	/* parsing address argument */
 	if (inet_pton(AF_INET6, host, &request.addr.ip6) == 1) {
@@ -153,7 +154,7 @@ main(int argc, char *argv[], char *envp[])
 	}
 
 	/* parsing port number */
-	if ((request.port = htons(strtol(port, NULL, 0))) == 0) goto err;
+	if ((request.port = htons((uint16_t)strtol(port, NULL, 0))) == 0) goto err;
 
 	/* socks: start negotiation */
 	if (write(WRITE_FD, &nego, sizeof nego) < 0) goto err;
@@ -166,9 +167,9 @@ main(int argc, char *argv[], char *envp[])
 	if (write(WRITE_FD, &request, 4) < 0) goto err;
 
 	if (request.atyp == IPv6) {
-		write(WRITE_FD, &(request.addr.ip6), 16);
+		write(WRITE_FD, &request.addr.ip6, 16);
 	} else if (request.atyp == IPv4) {
-		write(WRITE_FD, &(request.addr.ip4), 4);
+		write(WRITE_FD, &request.addr.ip4, 4);
 	} else if (request.atyp == BIND) {
 		request.addr.name.len = strlen(host);
 		write(WRITE_FD, &request.addr.name.len, \
@@ -197,35 +198,49 @@ main(int argc, char *argv[], char *envp[])
 		read(READ_FD, &reply.addr.name.len, sizeof reply.addr.name.len);
 		read(READ_FD, &reply.addr.name.str, reply.addr.name.len);
 	} else {
-		perror("unknown address type in reply");
+		perror("socks: unknown address type in reply");
 	}
 
 	/* read the port of the replay */
 	read(READ_FD, &reply.port, sizeof reply.port);
-	reply.port = ntohs(request.port);
 
 	/* set ucspi enviroment variables */
 	char *tcp_remote_ip   = getenv("TCPREMOTEIP");
 	char *tcp_remote_port = getenv("TCPREMOTEPORT");
 	char *tcp_remote_host = getenv("TCPREMOTEHOST");
 	char *tcp_local_ip    = getenv("TCPLOCALIP");
-	char *tcp_local_port  = getenv("TCPLOCALIP");
+	char *tcp_local_port  = getenv("TCPLOCALPORT");
+	char *tcp_local_host  = getenv("TCPLOCALHOST");
 
 	if (tcp_remote_ip   != NULL)setenv("SOCKSREMOTEIP"  ,tcp_remote_ip  ,1);
 	if (tcp_remote_port != NULL)setenv("SOCKSREMOTEPORT",tcp_remote_port,1);
 	if (tcp_remote_host != NULL)setenv("SOCKSREMOTEHOST",tcp_remote_host,1);
 	if (tcp_local_ip    != NULL)setenv("SOCKSLOCALIP"   ,tcp_local_ip   ,1);
 	if (tcp_local_port  != NULL)setenv("SOCKSLOCALPORT" ,tcp_local_port ,1);
+	if (tcp_local_host  != NULL)setenv("SOCKSLOCALHOST" ,tcp_local_host ,1);
 
 	char tmp[BUFSIZ];
-	inet_ntop(af, &request.addr, tmp, sizeof tmp);
-	setenv("TCPREMOTEIP", tmp, 1);
-	snprintf(tmp, sizeof tmp, "%d", request.port);
+	if (request.atyp == IPv6 || request.atyp == IPv4) {
+		inet_ntop(af, &request.addr, tmp, sizeof tmp);
+		setenv("TCPREMOTEIP", tmp, 1);
+		unsetenv("TCPREMOTEHOST");
+	} else {
+		setenv("TCPREMOTEHOST", host, 1);
+		unsetenv("TCPREMOTEIP");
+	}
+	snprintf(tmp, sizeof tmp, "%d", ntohs(request.port));
 	setenv("TCPREMOTEPORT", tmp, 1);
 
-	inet_ntop(af, &reply.addr, tmp, sizeof tmp);
-	setenv("TCPLOCALIP", tmp, 1);
-	snprintf(tmp, sizeof tmp, "%d", reply.port);
+	if (reply.atyp == IPv6 || reply.atyp == IPv4) {
+		inet_ntop(af, &reply.addr, tmp, sizeof tmp);
+		setenv("TCPLOCALIP", tmp, 1);
+		unsetenv("TCPLOCALHOST");
+	} else {
+		strlcpy(tmp, reply.addr.name.str, reply.addr.name.len);
+		setenv("TCPLOCALHOST", tmp, 1);
+		unsetenv("TCPLOCALIP");
+	}
+	snprintf(tmp, sizeof tmp, "%d", ntohs(reply.port));
 	setenv("TCPLOCALPORT", tmp, 1);
 
 	/* start client program */
