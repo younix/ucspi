@@ -1,0 +1,43 @@
+.Dd $Mdocdate$
+.Dt SSLC 1
+.Sh NAME
+.Nm sslc
+.Nd UCSPI SSL Client
+.Sh SYNOPSIS
+.Nm tcpclient Ar host Ar port Nm sslc
+.Op Fl hN
+.Op Fl f Ar cafile
+.Op Fl p Ar capath
+.Ar program
+.Op arguments
+.Sh DESCRIPTION
+The
+.Nm
+utility is a SSL client to be used in UCSPI execchains.
+The certificates available via
+.Ar cafile
+and
+.Ar capath
+are trusted.
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl h
+Show usage text.
+.It Fl N
+Ignore result of certificate check.
+.It Fl f Ar cafile
+.Ar cafile
+is a file of CA certificates in PEM format.
+The file can contain several CA certificates.
+.It Fl p Ar capath
+.Ar capath
+is a directory containing CA certificates in PEM format.
+The files each contain one CA certificate.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh SEE ALSO
+.Xr tcpclient 1
+.Xr socks 1
+.Sh AUTHORS
+This program was written by Jan Klemkow.
