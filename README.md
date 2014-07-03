@@ -8,10 +8,16 @@ socks is an ucpi socks client.
 
 ## sslc
 
-**CAUTION: NO CERTIFICATE CHECKING IS IMPLEMENTED YET!!!**
+**CAUTION: JUST BASIC CERTIFICATE CHECKING IS IMPLEMENTED YET!**
 
 sslc estableshs an SSL/TLS connection and forwards transparently the traffic
 from the following programms.
+
+### TODO:
+ * Hostname check
+ * Fingerprint accept
+ * Revocation check
+ * OCSP
 
 ## examples
 
