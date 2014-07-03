@@ -34,7 +34,7 @@ char **environ;
 static void
 usage(void)
 {
-	fprintf(stderr, "sslc [-h] [-f CAFILE] [-p CAPATH] PROGRAM [ARGS]\n");
+	fprintf(stderr, "sslc [-hN] [-f CAFILE] [-p CAPATH] PROGRAM [ARGS]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -54,16 +54,20 @@ main(int argc, char *argv[], char *envp[])
 	int sout = 6;
 	int sin = 7;
 
-	char *ca_file = CAFILE;
-	char *ca_path = CAPATH;
+	char *ca_file = NULL;
+	char *ca_path = NULL;
+	int verify_mode = SSL_VERIFY_PEER;
 
-	while ((ch = getopt(argc, argv, "f:p:h")) != -1) {
+	while ((ch = getopt(argc, argv, "f:p:Nh")) != -1) {
 		switch (ch) {
 		case 'f':
 			if ((ca_file = strdup(optarg)) == NULL) goto err;
 			break;
 		case 'p':
 			if ((ca_path = strdup(optarg)) == NULL) goto err;
+			break;
+		case 'N':
+			verify_mode = SSL_VERIFY_NONE;
 			break;
 		case 'h':
 		default:
@@ -116,8 +120,12 @@ main(int argc, char *argv[], char *envp[])
 	if ((ssl_ctx = SSL_CTX_new(SSLv23_client_method())) == NULL) goto err;
 
 	/* prepare certificate checking */
-	SSL_CTX_load_verify_locations(ssl_ctx, ca_file, ca_path);
-	SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, NULL);
+	if (ca_file != NULL || ca_path != NULL)
+		SSL_CTX_load_verify_locations(ssl_ctx, ca_file, ca_path);
+	else
+		SSL_CTX_set_default_verify_paths(ssl_ctx);
+
+	SSL_CTX_set_verify(ssl_ctx, verify_mode, NULL);
 
 	if ((ssl = SSL_new(ssl_ctx)) == NULL) goto err;
 	if (SSL_set_rfd(ssl, sin) == 0) goto err;
