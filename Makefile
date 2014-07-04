@@ -12,6 +12,9 @@ socks: socks.o
 tcpclient: tcpclient.o
 	${CC} -static -o $@ tcpclient.o
 
+httpc: httpc.o
+	${CC} -static -o $@ httpc.o
+
 sslc: sslc.o
 	${CC} -static -o sslc sslc.o ${LDFLAGS_SSL}
 

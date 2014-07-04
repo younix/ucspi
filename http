@@ -1,0 +1,19 @@
+#!/bin/sh
+
+#printf "GET / HTTP/1.1\r\n" > /dev/fd/6
+#printf "Host: $1\r\n" > /dev/fd/6
+#printf "\r\n" > /dev/fd/6
+#cat < /dev/fd/7
+
+url=$1
+
+scheme=$(echo $url | sed -nEe 's%(.*)://[^/]*/.*%\1%p')
+host=$(echo $url | sed -nEe 's%.*://([^/]*)/.*%\1%p')
+uri=$(echo $url | sed -nEe 's%.*://[^/]*/(.*)%\1%p')
+
+port=$(echo $host | sed -nEe 's/.*:([[:digit:]]*)$/\1/p')
+port=$(echo $host | sed -nEe 's/.*:([[:digit:]]*)$/\1/p')
+
+
+echo tcpclient $host 80 httpc $uri
+tcpclient $host $port ./httpc

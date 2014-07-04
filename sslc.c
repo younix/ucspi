@@ -154,13 +154,14 @@ main(int argc, char *argv[], char *envp[])
 			SSL_write(ssl, buf, n);
 		}
 	}
+ out:
+	return EXIT_SUCCESS;
  err:
 	if (ret != 1) {
-		fprintf(stderr, "check ssl error\n");
 		int e = SSL_get_error(ssl, ret);
-		fprintf(stderr, "ssl error: %d\n", e);
+		fprintf(stderr, "sslc: ssl error: %d\n", e);
 		ERR_print_errors_fp(stderr);
 	}
-	perror(__func__);
+	perror("socks:");
 	return EXIT_FAILURE;
 }
