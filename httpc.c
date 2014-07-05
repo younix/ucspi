@@ -14,30 +14,41 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <fcntl.h>
 #include <libgen.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-bool
+#define PIPE_WRITE 6
+#define PIPE_READ 7
+
+static bool
 output(char *file)
 {
-	if (strcmp(file, "-") == 0)
-		fd = FILENO_STDOUT;
-	else
-		if ((fd = open(file, O_WRONLY)) == -1) goto err;
+	ssize_t size;
+	int fd = STDOUT_FILENO;
+	char buf[BUFSIZ];
 
-	while ((size = read(7, buf, sizeof buf)) > 0)
-		write(fd, buf, size);
-	if (close(fd) == -1) goto err;
+	if (strcmp(file, "-") != 0)
+		if ((fd = open(file, O_WRONLY)) == -1) return false;
 
+	while ((size = read(PIPE_READ, buf, sizeof buf)) > 0)
+		if (write(fd, buf, size) == -1) return false;
+
+	if (size == -1)
+		return false;
+
+	if (close(fd) == -1) return false;
+	return true;
 }
 
 static void
 usage(void)
 {
-	fprintf(stderr, "httpc [-h] [-H HOST] [FILE]\n");
+	fprintf(stderr, "httpc [-h] [-H HOST] [-o file] [URI]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -45,12 +56,10 @@ int
 main(int argc, char *argv[])
 {
 	int ch;
-	int fd;
 	char *host = getenv("TCPREMOTEHOST");
 	char *file = NULL;
 	char *uri = "/";
 	FILE *fh = NULL;
-	ssize_t size;
 
 	while ((ch = getopt(argc, argv, "H:o:h")) != -1) {
 		switch (ch) {
@@ -72,13 +81,18 @@ main(int argc, char *argv[])
 	if (argc > 0)
 		uri = argv[0];
 
-	if ((fh = fdopen(6, "r")) == NULL) goto err;
+	if ((fh = fdopen(PIPE_WRITE, "r")) == NULL) goto err;
 
 	/* print request */
 	fprintf(fh, "GET %s HTTP/1.1\r\n", uri);
 
 	if (host != NULL)
 		fprintf(fh, "Host: %s\r\n", host);
+
+	/* get response */
+	if (file == NULL)
+		file = basename(uri);
+	if (output(file) == false) goto err;
 
 	return EXIT_SUCCESS;
  err:

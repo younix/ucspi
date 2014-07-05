@@ -22,7 +22,7 @@ sslc: sslc.o
 	${CC} ${CFLAGS} -c $<
 
 clean:
-	rm -rf *.core *.o obj/* socks tcpclient sslc ucspi-tools-*
+	rm -rf *.core *.o obj/* socks tcpclient sslc httpc ucspi-tools-*
 
 install: all
 	mkdir -p ${DESTDIR}${BINDIR}
