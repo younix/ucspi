@@ -3,10 +3,13 @@ include config.mk
 .PHONY: all clean install dist
 .SUFFIXES: .c .o
 
-all: socks sslc
+all: socks sslc ucspi-tee
 
 socks: socks.o
-	${CC} -static -o $@ socks.o
+	${CC} -g -static -o $@ socks.o
+
+ucspi-tee: ucspi-tee.o
+	${CC} -g -static -o $@ ucspi-tee.o
 
 # Just for some tests.  Don't use this.
 tcpclient: tcpclient.o

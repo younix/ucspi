@@ -45,6 +45,19 @@ output(char *file)
 	return true;
 }
 
+static bool
+read_response(FILE *fh)
+{
+	char buf[BUFSIZ];
+
+	if (fgets(buf, sizeof buf, fh) == NULL) return false;
+	
+	while (fgets(buf, sizeof buf, fh) != NULL)
+		if (strcmp(buf, "\r\n")) return true;
+
+	return false;
+}
+
 static void
 usage(void)
 {
@@ -59,7 +72,8 @@ main(int argc, char *argv[])
 	char *host = getenv("TCPREMOTEHOST");
 	char *file = NULL;
 	char *uri = "/";
-	FILE *fh = NULL;
+	FILE *read_fh = NULL;
+	FILE *write_fh = NULL;
 
 	while ((ch = getopt(argc, argv, "H:o:h")) != -1) {
 		switch (ch) {
@@ -81,15 +95,17 @@ main(int argc, char *argv[])
 	if (argc > 0)
 		uri = argv[0];
 
-	if ((fh = fdopen(PIPE_WRITE, "r")) == NULL) goto err;
+	if ((read_fh = fdopen(PIPE_READ, "r")) == NULL) goto err;
+	if ((write_fh = fdopen(PIPE_WRITE, "w")) == NULL) goto err;
 
 	/* print request */
-	fprintf(fh, "GET %s HTTP/1.1\r\n", uri);
+	fprintf(write_fh, "GET %s HTTP/1.1\r\n", uri);
 
 	if (host != NULL)
-		fprintf(fh, "Host: %s\r\n", host);
+		fprintf(write_fh, "Host: %s\r\n", host);
 
 	/* get response */
+	read_response(read_fh);
 	if (file == NULL)
 		file = basename(uri);
 	if (output(file) == false) goto err;

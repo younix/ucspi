@@ -16,6 +16,7 @@
 
 #define _XOPEN_SOURCE 700
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -23,6 +24,7 @@
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#define SSL_NAME_LEN 256
 
 #ifndef MAX
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
@@ -30,6 +32,23 @@
 
 /* enviroment */
 char **environ;
+#if 0
+static bool
+check_hostname(SSL *ssl, const char *hostname)
+{
+	X509 *cert;
+	char buf[SSL_NAME_LEN];
+	if ((cert = SSL_get_peer_certificate(ssl)) == NULL) return false;
+	
+	X509_NAME_get_text_by_NID(
+	    X509_get_subject_name(cert), NID_commonName, buf, sizeof buf);
+
+	buf[SSL_NAME_LEN - 1] = '\0';
+	fprintf(stderr, "cert hostname: '%s'\n", buf);
+
+	return true;
+}
+#endif
 
 static void
 usage(void)
@@ -132,6 +151,8 @@ main(int argc, char *argv[], char *envp[])
 	if (SSL_set_wfd(ssl, sout) == 0) goto err;
 	if ((ret = SSL_connect(ssl)) < 1) goto err;
 
+	//check_hostname(ssl, "www.google.de");
+
 	for (;;) {
 		int e;
 		char buf[BUFSIZ];
@@ -154,7 +175,7 @@ main(int argc, char *argv[], char *envp[])
 			SSL_write(ssl, buf, n);
 		}
 	}
- out:
+
 	return EXIT_SUCCESS;
  err:
 	if (ret != 1) {
@@ -162,6 +183,6 @@ main(int argc, char *argv[], char *envp[])
 		fprintf(stderr, "sslc: ssl error: %d\n", e);
 		ERR_print_errors_fp(stderr);
 	}
-	perror("socks:");
+	perror("sslc");
 	return EXIT_FAILURE;
 }
