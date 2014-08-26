@@ -1,6 +1,7 @@
 include config.mk
 
 DEFINES += -D_XOPEN_SOURCE=700
+DEFINES += -D_BSD_SOURCE
 CFLAGS_SSL=`pkg-config --cflags libssl`
 LIBS_SSL=`pkg-config --libs libssl`
 
