@@ -1,28 +1,32 @@
 include config.mk
 
+DEFINES += -D_XOPEN_SOURCE=500
+CFLAGS_SSL=`pkg-config --cflags libssl`
+LIBS_SSL=`pkg-config --libs libssl`
+
 .PHONY: all clean install dist
 .SUFFIXES: .c .o
 
 all: socks sslc ucspi-tee
 
 socks: socks.o
-	${CC} -g -static -o $@ socks.o
+	$(CC) -static -o $@ socks.o $(LIBS_BSD)
 
 ucspi-tee: ucspi-tee.o
-	${CC} -g -static -o $@ ucspi-tee.o
+	$(CC) -static -o $@ ucspi-tee.o
 
 # Just for some tests.  Don't use this.
 tcpclient: tcpclient.o
-	${CC} -static -o $@ tcpclient.o
+	$(CC) -static -o $@ tcpclient.o
 
 httpc: httpc.o
-	${CC} -static -o $@ httpc.o
+	$(CC) -static -o $@ httpc.o
 
 sslc: sslc.o
-	${CC} -static -o sslc sslc.o ${LDFLAGS_SSL}
+	$(CC) -o sslc sslc.o $(LIBS_SSL) $(LIBS_BSD)
 
 .c.o:
-	${CC} ${CFLAGS} -c $<
+	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
 clean:
 	rm -rf *.core *.o obj/* socks tcpclient sslc httpc ucspi-tools-*

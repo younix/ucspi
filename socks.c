@@ -17,8 +17,13 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+
+#ifdef USE_LIBBSD
+#	include <bsd/string.h>
+#else
+#	include <string.h>
+#endif
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
