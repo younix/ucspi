@@ -3,12 +3,12 @@ include config.mk
 DEFINES += -D_XOPEN_SOURCE=700
 DEFINES += -D_BSD_SOURCE
 CFLAGS_SSL=`pkg-config --cflags libssl`
-LIBS_SSL=`pkg-config --libs libssl`
+LIBS_SSL= -lressl `pkg-config --libs libssl`
 
 .PHONY: all clean install dist
 .SUFFIXES: .c .o
 
-all: socks sslc ucspi-tee
+all: socks sslc ucspi-tee resslc
 
 socks: socks.o
 	$(CC) -static -o $@ socks.o $(LIBS_BSD)
@@ -25,6 +25,9 @@ httpc: httpc.o
 
 sslc: sslc.o
 	$(CC) -o sslc sslc.o $(LIBS_SSL) $(LIBS_BSD)
+
+resslc: resslc.o
+	$(CC) -o resslc resslc.o $(LIBS_SSL) $(LIBS_BSD)
 
 .c.o:
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
