@@ -74,6 +74,10 @@ main(int argc, char *argv[])
 	char *uri = "/";
 	FILE *read_fh = NULL;
 	FILE *write_fh = NULL;
+	int i = 0;
+
+	fprintf(stderr, "START httpc\n");
+	fprintf(stderr, "httpc i = %d\n", i++);
 
 	while ((ch = getopt(argc, argv, "H:o:h")) != -1) {
 		switch (ch) {
@@ -92,18 +96,25 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
+	fprintf(stderr, "httpc i = %d\n", i++);
 	if (argc > 0)
 		uri = argv[0];
 
+	fprintf(stderr, "httpc i = %d - fdopen\n", i++);
 	if ((read_fh = fdopen(PIPE_READ, "r")) == NULL) goto err;
+	fprintf(stderr, "httpc i = %d - fdopen\n", i++);
 	if ((write_fh = fdopen(PIPE_WRITE, "w")) == NULL) goto err;
 
+	fprintf(stderr, "httpc i = %d - fprintf\n", i++);
 	/* print request */
 	fprintf(write_fh, "GET %s HTTP/1.1\r\n", uri);
 
 	if (host != NULL)
 		fprintf(write_fh, "Host: %s\r\n", host);
 
+	fprintf(write_fh, "\r\n");
+
+	fprintf(stderr, "httpc i = %d - read_response\n", i++);
 	/* get response */
 	read_response(read_fh);
 	if (file == NULL)

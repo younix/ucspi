@@ -8,7 +8,7 @@ LIBS_SSL= -lressl `pkg-config --libs libssl`
 .PHONY: all clean install dist
 .SUFFIXES: .c .o
 
-all: socks sslc ucspi-tee resslc
+all: socks sslc ucspi-tee resslc httpc
 
 socks: socks.o
 	$(CC) -static -o $@ socks.o $(LIBS_BSD)
@@ -33,7 +33,7 @@ resslc: resslc.o
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
 clean:
-	rm -rf *.core *.o obj/* socks tcpclient sslc httpc ucspi-tools-*
+	rm -rf *.core *.o obj/* socks tcpclient resslc sslc httpc ucspi-tools-*
 
 install: all
 	mkdir -p ${DESTDIR}${BINDIR}

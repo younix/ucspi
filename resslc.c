@@ -14,6 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <err.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -23,6 +24,7 @@
 
 #include <sys/select.h>
 
+#include <openssl/err.h>
 #include <ressl.h>
 
 #ifndef MAX
@@ -42,6 +44,7 @@ usage(void)
 int
 main(int argc, char *argv[], char *envp[])
 {
+	int e;
 	struct ressl *ssl = NULL;
 	int ch;
 	environ = envp;
@@ -59,6 +62,7 @@ main(int argc, char *argv[], char *envp[])
 	//int verify_mode = SSL_VERIFY_PEER;
 	char *host = getenv("TCPREMOTEHOST");
 	struct ressl_config *ssl_config;
+	char buf[BUFSIZ];
 
 	while ((ch = getopt(argc, argv, "f:p:Nh")) != -1) {
 		switch (ch) {
@@ -111,6 +115,7 @@ main(int argc, char *argv[], char *envp[])
 		if (close(po_read) < 0) goto err;
 		execve(prog, argv, environ);
 	case -1:
+		fprintf(stderr, "sslc: fork\n");
 		goto err;
 	}
 
@@ -118,21 +123,30 @@ main(int argc, char *argv[], char *envp[])
 	out = po[PIPE_WRITE];
 
 	if ((ssl_config = ressl_config_new()) == NULL)
-		goto err;
+		err(EXIT_FAILURE, "ressl_config_new");
+
+	ressl_config_insecure_noverifycert(ssl_config);
 
 	if (ressl_init() != 0)
-		goto err;
+		err(EXIT_FAILURE, "ressl_init");
 
 	if ((ssl = ressl_client()) == NULL)
-		goto err;
+		err(EXIT_FAILURE, "ressl_client");
 
 	if (ressl_configure(ssl, ssl_config) != 0)
+		err(EXIT_FAILURE, "ressl_configure");
+
+	host = "www.fefe.de";
+
+	if (ressl_set_fds(ssl, sin, sout) != 0)
 		goto err;
 
-	if (ressl_connect_socket2(ssl, sin, sout, host) != 0)
+	if (ressl_connect_socket(ssl, -1, host) != 0)
 		goto err;
+		//err(EXIT_FAILURE, "ressl_connect_socket2");
 
 	for (;;) {
+		int ret;
 		char buf[BUFSIZ];
 		size_t n = 0;
 		fd_set readfds;
@@ -140,12 +154,25 @@ main(int argc, char *argv[], char *envp[])
 		FD_SET(in, &readfds);
 		FD_SET(sin, &readfds);
 		int max_fd = MAX(in, sin);
+		
+		fprintf(stderr, "sslc: call select\n");
 		if (select(max_fd+1, &readfds, NULL, NULL, NULL) == -1) goto err;
 
+		fprintf(stderr, "sslc: select\n");
+
 		if (FD_ISSET(sin, &readfds)) {
-			if (ressl_read(ssl, buf, sizeof buf, &n) == -1) goto err;
+			fprintf(stderr, "sslc: sin!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+			do {
+				fprintf(stderr, "sslc: do read!\n");
+				ret = ressl_read(ssl, buf, sizeof buf, &n);
+				fprintf(stderr, "sslc: done read!\n");
+				if (ret == -1) goto err;
+			} while (ret == RESSL_READ_AGAIN);
+			fprintf(stderr, "sslc: write\n");
 			write(out, buf, n);
+			fprintf(stderr, "sslc: sin?????????????????????????\n");
 		} else if (FD_ISSET(in, &readfds)) {
+			fprintf(stderr, "sslc: in\n");
 			if ((n = read(in, buf, sizeof buf)) <= 0) goto err;
 			ressl_write(ssl, buf, n, &n);
 		}
@@ -153,6 +180,10 @@ main(int argc, char *argv[], char *envp[])
 
 	return EXIT_SUCCESS;
  err:
-	perror("sslc");
-	return EXIT_FAILURE;
+
+	while ((e = ERR_get_error())) {
+		ERR_error_string(e, buf);
+		fprintf(stderr, " %s\n", buf);
+	}
+	err(EXIT_FAILURE, "%s", ressl_error(ssl));
 }
