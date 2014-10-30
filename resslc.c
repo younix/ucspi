@@ -155,24 +155,15 @@ main(int argc, char *argv[], char *envp[])
 		FD_SET(sin, &readfds);
 		int max_fd = MAX(in, sin);
 		
-		fprintf(stderr, "sslc: call select\n");
 		if (select(max_fd+1, &readfds, NULL, NULL, NULL) == -1) goto err;
 
-		fprintf(stderr, "sslc: select\n");
-
 		if (FD_ISSET(sin, &readfds)) {
-			fprintf(stderr, "sslc: sin!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 			do {
-				fprintf(stderr, "sslc: do read!\n");
 				ret = ressl_read(ssl, buf, sizeof buf, &n);
-				fprintf(stderr, "sslc: done read!\n");
 				if (ret == -1) goto err;
 			} while (ret == RESSL_READ_AGAIN);
-			fprintf(stderr, "sslc: write\n");
 			write(out, buf, n);
-			fprintf(stderr, "sslc: sin?????????????????????????\n");
 		} else if (FD_ISSET(in, &readfds)) {
-			fprintf(stderr, "sslc: in\n");
 			if ((n = read(in, buf, sizeof buf)) <= 0) goto err;
 			ressl_write(ssl, buf, n, &n);
 		}
