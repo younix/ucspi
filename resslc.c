@@ -143,29 +143,36 @@ main(int argc, char *argv[], char *envp[])
 		int ret;
 		char buf[BUFSIZ];
 		size_t n = 0;
+		ssize_t sn = 0;
 		fd_set readfds;
 		FD_ZERO(&readfds);
 		FD_SET(in, &readfds);
 		FD_SET(sin, &readfds);
 		int max_fd = MAX(in, sin);
-		
-		if (select(max_fd+1, &readfds, NULL, NULL, NULL) == -1) goto err;
+
+		ret = select(max_fd+1, &readfds, NULL, NULL, NULL);
+		if (ret == -1) goto err;
 
 		if (FD_ISSET(sin, &readfds)) {
 			do {
+ again:
 				ret = tls_read(ssl, buf, sizeof buf, &n);
-				if (ret == -1) goto err;
-			} while (ret == TLS_READ_AGAIN);
-			write(out, buf, n);
+				if (ret == TLS_READ_AGAIN)
+					goto again;
+				if (ret == -1)
+					goto err;
+				if (write(out, buf, n) == -1)
+					err(EXIT_FAILURE, "write()");
+			} while (n == sizeof buf);
 		} else if (FD_ISSET(in, &readfds)) {
-			if ((n = read(in, buf, sizeof buf)) <= 0) goto err;
-			tls_write(ssl, buf, n, &n);
+			if ((sn = read(in, buf, sizeof buf)) == -1)
+				err(EXIT_FAILURE, "read()");
+			ret = tls_write(ssl, buf, sn, &sn);
 		}
 	}
 
 	return EXIT_SUCCESS;
  err:
-
 	while ((e = ERR_get_error())) {
 		ERR_error_string(e, buf);
 		fprintf(stderr, " %s\n", buf);
