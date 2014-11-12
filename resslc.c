@@ -25,7 +25,7 @@
 #include <sys/select.h>
 
 #include <openssl/err.h>
-#include <ressl.h>
+#include <tls.h>
 
 #ifndef MAX
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
@@ -45,7 +45,7 @@ int
 main(int argc, char *argv[], char *envp[])
 {
 	int e;
-	struct ressl *ssl = NULL;
+	struct tls *ssl = NULL;
 	int ch;
 	environ = envp;
 
@@ -61,7 +61,7 @@ main(int argc, char *argv[], char *envp[])
 	char *ca_path = NULL;
 	//int verify_mode = SSL_VERIFY_PEER;
 	char *host = getenv("TCPREMOTEHOST");
-	struct ressl_config *ssl_config;
+	struct tls_config *ssl_config;
 	char buf[BUFSIZ];
 
 	while ((ch = getopt(argc, argv, "f:p:Nh")) != -1) {
@@ -122,28 +122,22 @@ main(int argc, char *argv[], char *envp[])
 	in = pi[PIPE_READ];
 	out = po[PIPE_WRITE];
 
-	if ((ssl_config = ressl_config_new()) == NULL)
+	if ((ssl_config = tls_config_new()) == NULL)
 		err(EXIT_FAILURE, "ressl_config_new");
 
-	ressl_config_insecure_noverifycert(ssl_config);
+	tls_config_insecure_noverifycert(ssl_config);
 
-	if (ressl_init() != 0)
+	if (tls_init() != 0)
 		err(EXIT_FAILURE, "ressl_init");
 
-	if ((ssl = ressl_client()) == NULL)
+	if ((ssl = tls_client()) == NULL)
 		err(EXIT_FAILURE, "ressl_client");
 
-	if (ressl_configure(ssl, ssl_config) != 0)
+	if (tls_configure(ssl, ssl_config) != 0)
 		err(EXIT_FAILURE, "ressl_configure");
 
-	host = "www.fefe.de";
-
-	if (ressl_set_fds(ssl, sin, sout) != 0)
-		goto err;
-
-	if (ressl_connect_socket(ssl, -1, host) != 0)
-		goto err;
-		//err(EXIT_FAILURE, "ressl_connect_socket2");
+	if (tls_connect_fds(ssl, sin, sout, host) != 0)
+		err(EXIT_FAILURE, "ressl_connect_socket2");
 
 	for (;;) {
 		int ret;
@@ -159,13 +153,13 @@ main(int argc, char *argv[], char *envp[])
 
 		if (FD_ISSET(sin, &readfds)) {
 			do {
-				ret = ressl_read(ssl, buf, sizeof buf, &n);
+				ret = tls_read(ssl, buf, sizeof buf, &n);
 				if (ret == -1) goto err;
-			} while (ret == RESSL_READ_AGAIN);
+			} while (ret == TLS_READ_AGAIN);
 			write(out, buf, n);
 		} else if (FD_ISSET(in, &readfds)) {
 			if ((n = read(in, buf, sizeof buf)) <= 0) goto err;
-			ressl_write(ssl, buf, n, &n);
+			tls_write(ssl, buf, n, &n);
 		}
 	}
 
@@ -176,5 +170,5 @@ main(int argc, char *argv[], char *envp[])
 		ERR_error_string(e, buf);
 		fprintf(stderr, " %s\n", buf);
 	}
-	err(EXIT_FAILURE, "%s", ressl_error(ssl));
+	err(EXIT_FAILURE, "%s", tls_error(ssl));
 }
