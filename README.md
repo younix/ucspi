@@ -5,12 +5,13 @@ UNIX Client/Server Program Interface
 ## socks
 
 socks is an ucpi socks client.
+It supports socks version 5.
 
-## sslc
+## tlsc
 
 **CAUTION: JUST BASIC CERTIFICATE CHECKING IS IMPLEMENTED YET!**
 
-sslc estableshs an SSL/TLS connection and forwards transparently the traffic
+tlsc estableshs an TLS connection and forwards transparently the traffic
 from the following programms.
 
 ### TODO:
