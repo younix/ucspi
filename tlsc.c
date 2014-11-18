@@ -161,7 +161,7 @@ main(int argc, char *argv[], char *envp[])
 		err(EXIT_FAILURE, "tls_configure");
 
 	if (tls_connect_fds(tls, sin, sout, host) != 0)
-		err(EXIT_FAILURE, "tls_connect_socket2");
+		err(EXIT_FAILURE, "tls_connect_fds");
 
 	/* communication loop */
 	for (;;) {
