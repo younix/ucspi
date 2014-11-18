@@ -37,7 +37,7 @@ char **environ;
 static void
 usage(void)
 {
-	fprintf(stderr, "sslc [-hN] [-f CAFILE] [-p CAPATH] PROGRAM [ARGS]\n");
+	fprintf(stderr, "tlsc [-hN] [-f CAFILE] [-p CAPATH] PROGRAM [ARGS]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -45,7 +45,7 @@ int
 main(int argc, char *argv[], char *envp[])
 {
 	int e;
-	struct tls *ssl = NULL;
+	struct tls *tls = NULL;
 	int ch;
 	environ = envp;
 
@@ -64,7 +64,7 @@ main(int argc, char *argv[], char *envp[])
 	bool no_host_verification = false;
 	bool no_cert_verification = false;
 	char *host = getenv("TCPREMOTEHOST");
-	struct tls_config *ssl_config;
+	struct tls_config *tls_config;
 	char buf[BUFSIZ];
 
 	while ((ch = getopt(argc, argv, "c:f:p:NHCh")) != -1) {
@@ -127,41 +127,41 @@ main(int argc, char *argv[], char *envp[])
 		if (close(po_read) < 0) goto err;
 		execve(prog, argv, environ);
 	case -1:
-		fprintf(stderr, "sslc: fork\n");
+		fprintf(stderr, "tlsc: fork\n");
 		goto err;
 	}
 
 	in = pi[PIPE_READ];
 	out = po[PIPE_WRITE];
 
-	if ((ssl_config = tls_config_new()) == NULL)
-		err(EXIT_FAILURE, "ressl_config_new");
+	if ((tls_config = tls_config_new()) == NULL)
+		err(EXIT_FAILURE, "tls_config_new");
 
 	/* verification settings */
 	if (ca_file != NULL)
-		tls_config_set_ca_file(ssl_config, ca_file);
+		tls_config_set_ca_file(tls_config, ca_file);
 
 	if (ca_path != NULL)
-		tls_config_set_ca_path(ssl_config, ca_path);
+		tls_config_set_ca_path(tls_config, ca_path);
 
 	if (cert_file != NULL)
-		tls_config_set_cert_file(ssl_config, cert_file);
+		tls_config_set_cert_file(tls_config, cert_file);
 
 	if (no_verification)
-		tls_config_insecure_noverifycert(ssl_config);
+		tls_config_insecure_noverifycert(tls_config);
 
 	/* libtls setup */
 	if (tls_init() != 0)
-		err(EXIT_FAILURE, "ressl_init");
+		err(EXIT_FAILURE, "tls_init");
 
-	if ((ssl = tls_client()) == NULL)
-		err(EXIT_FAILURE, "ressl_client");
+	if ((tls = tls_client()) == NULL)
+		err(EXIT_FAILURE, "tls_client");
 
-	if (tls_configure(ssl, ssl_config) != 0)
-		err(EXIT_FAILURE, "ressl_configure");
+	if (tls_configure(tls, tls_config) != 0)
+		err(EXIT_FAILURE, "tls_configure");
 
-	if (tls_connect_fds(ssl, sin, sout, host) != 0)
-		err(EXIT_FAILURE, "ressl_connect_socket2");
+	if (tls_connect_fds(tls, sin, sout, host) != 0)
+		err(EXIT_FAILURE, "tls_connect_socket2");
 
 	/* communication loop */
 	for (;;) {
@@ -181,7 +181,7 @@ main(int argc, char *argv[], char *envp[])
 		if (FD_ISSET(sin, &readfds)) {
 			do {
  again:
-				ret = tls_read(ssl, buf, sizeof buf, &n);
+				ret = tls_read(tls, buf, sizeof buf, &n);
 				if (ret == TLS_READ_AGAIN)
 					goto again;
 				if (ret == -1)
@@ -192,7 +192,7 @@ main(int argc, char *argv[], char *envp[])
 		} else if (FD_ISSET(in, &readfds)) {
 			if ((sn = read(in, buf, sizeof buf)) == -1)
 				err(EXIT_FAILURE, "read()");
-			ret = tls_write(ssl, buf, sn, (size_t*)&sn);
+			ret = tls_write(tls, buf, sn, (size_t*)&sn);
 		}
 	}
 
@@ -202,5 +202,5 @@ main(int argc, char *argv[], char *envp[])
 		ERR_error_string(e, buf);
 		fprintf(stderr, " %s\n", buf);
 	}
-	err(EXIT_FAILURE, "%s", tls_error(ssl));
+	err(EXIT_FAILURE, "%s", tls_error(tls));
 }
