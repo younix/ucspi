@@ -14,6 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/select.h>
+
 #include <err.h>
 #include <errno.h>
 #include <stdbool.h>
@@ -21,8 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <sys/select.h>
 
 #include <openssl/err.h>
 #include <tls.h>

@@ -14,6 +14,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,9 +27,6 @@
 #else
 #	include <string.h>
 #endif
-
-#include <arpa/inet.h>
-#include <sys/socket.h>
 
 /* enviroment */
 char **environ;

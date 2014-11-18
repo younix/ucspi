@@ -14,6 +14,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
 #include <err.h>
 #include <errno.h>
 #include <netdb.h>
@@ -22,10 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 
 /* enviroment */
 char **environ;
