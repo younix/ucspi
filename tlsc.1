@@ -5,26 +5,37 @@
 .Nd UCSPI TLS Client
 .Sh SYNOPSIS
 .Nm tcpclient Ar host Ar port Nm tlsc
-.Op Fl hN
-.Op Fl f Ar cafile
-.Op Fl p Ar capath
+.Op Fl hCH
+.Op Fl n Ar hostname
+.Op Fl c Ar cert_file
+.Op Fl f Ar ca_file
+.Op Fl p Ar ca_path
 .Ar program
-.Op arguments
+.Op args...
 .Sh DESCRIPTION
 The
 .Nm
-utility is a TLS client to be used in UCSPI execchains.
-The certificates available via
-.Ar cafile
-and
-.Ar capath
-are trusted.
+utility is a TLS client to be used in an UCSPI exec-chains.
+.Nm
+initializes the TLS tunnel an checks the server side certificate.
+The certificate verification can be controlled by to following options.
+The system CA certificates are used to verify the current connection
+certificate by default.
+With
+.Op Fl f
+.nm
+verify the certificate chain based on one of the CA certificates stored in
+.Ar ca_file
+It is also possible to set a directory of CA certificate as trusted base with
+.Op Fl p .
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl h
 Show usage text.
-.It Fl N
-Ignore result of certificate check.
+.It Fl c
+Uses first private key in
+.Ar cert_file
+for client site authentication.
 .It Fl f Ar cafile
 .Ar cafile
 is a file of CA certificates in PEM format.
@@ -33,6 +44,14 @@ The file can contain several CA certificates.
 .Ar capath
 is a directory containing CA certificates in PEM format.
 The files each contain one CA certificate.
+.It Fl n Ar hostname
+Uses
+.Ar hostname
+for hostname verification.
+.It Fl H
+Disables hostname verification.
+.It Fl C
+Disables certificate verification in general.
 .El
 .Sh EXIT STATUS
 .Ex -std
@@ -40,4 +59,8 @@ The files each contain one CA certificate.
 .Xr tcpclient 1
 .Xr socks 1
 .Sh AUTHORS
-This program was written by Jan Klemkow.
+.An -nosplit
+The
+.Nm
+program was written by
+.An Jan Klemkow Aq Mt j.klemkow@wemelug.de .
