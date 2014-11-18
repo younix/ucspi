@@ -59,13 +59,19 @@ main(int argc, char *argv[], char *envp[])
 
 	char *ca_file = NULL;
 	char *ca_path = NULL;
-	//int verify_mode = SSL_VERIFY_PEER;
+	char *cert_file = NULL;
+	bool no_verification = false;
+	bool no_host_verification = false;
+	bool no_cert_verification = false;
 	char *host = getenv("TCPREMOTEHOST");
 	struct tls_config *ssl_config;
 	char buf[BUFSIZ];
 
-	while ((ch = getopt(argc, argv, "f:p:Nh")) != -1) {
+	while ((ch = getopt(argc, argv, "c:f:p:NHCh")) != -1) {
 		switch (ch) {
+		case 'c':
+			if ((cert_file = strdup(optarg)) == NULL) goto err;
+			break;
 		case 'f':
 			if ((ca_file = strdup(optarg)) == NULL) goto err;
 			break;
@@ -73,7 +79,13 @@ main(int argc, char *argv[], char *envp[])
 			if ((ca_path = strdup(optarg)) == NULL) goto err;
 			break;
 		case 'N':
-			//verify_mode = SSL_VERIFY_NONE;
+			no_verification = true;
+			break;
+		case 'H':
+			no_host_verification = true;
+			break;
+		case 'C':
+			no_cert_verification = true;
 			break;
 		case 'h':
 		default:
@@ -125,8 +137,20 @@ main(int argc, char *argv[], char *envp[])
 	if ((ssl_config = tls_config_new()) == NULL)
 		err(EXIT_FAILURE, "ressl_config_new");
 
-	tls_config_insecure_noverifycert(ssl_config);
+	/* verification settings */
+	if (ca_file != NULL)
+		tls_config_set_ca_file(ssl_config, ca_file);
 
+	if (ca_path != NULL)
+		tls_config_set_ca_path(ssl_config, ca_path);
+
+	if (cert_file != NULL)
+		tls_config_set_cert_file(ssl_config, cert_file);
+
+	if (no_verification)
+		tls_config_insecure_noverifycert(ssl_config);
+
+	/* libtls setup */
 	if (tls_init() != 0)
 		err(EXIT_FAILURE, "ressl_init");
 
@@ -139,6 +163,7 @@ main(int argc, char *argv[], char *envp[])
 	if (tls_connect_fds(ssl, sin, sout, host) != 0)
 		err(EXIT_FAILURE, "ressl_connect_socket2");
 
+	/* communication loop */
 	for (;;) {
 		int ret;
 		char buf[BUFSIZ];
@@ -167,7 +192,7 @@ main(int argc, char *argv[], char *envp[])
 		} else if (FD_ISSET(in, &readfds)) {
 			if ((sn = read(in, buf, sizeof buf)) == -1)
 				err(EXIT_FAILURE, "read()");
-			ret = tls_write(ssl, buf, sn, &sn);
+			ret = tls_write(ssl, buf, sn, (size_t*)&sn);
 		}
 	}
 
