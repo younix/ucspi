@@ -38,7 +38,7 @@ static void
 usage(void)
 {
 	fprintf(stderr,
-	    "tlsc [-hCHN] [-c cert_file] [-f ca_file] [-p ca_path] "
+	    "tlsc [-hCH] [-c cert_file] [-f ca_file] [-p ca_path] "
 	    "program [args...]\n");
 	exit(EXIT_FAILURE);
 }
@@ -69,7 +69,7 @@ main(int argc, char *argv[], char *envp[])
 	struct tls_config *tls_config;
 	char buf[BUFSIZ];
 
-	while ((ch = getopt(argc, argv, "c:f:p:NHCh")) != -1) {
+	while ((ch = getopt(argc, argv, "c:f:p:n:HCh")) != -1) {
 		switch (ch) {
 		case 'c':
 			if ((cert_file = strdup(optarg)) == NULL) goto err;
@@ -80,8 +80,8 @@ main(int argc, char *argv[], char *envp[])
 		case 'p':
 			if ((ca_path = strdup(optarg)) == NULL) goto err;
 			break;
-		case 'N':
-			no_verification = true;
+		case 'n':
+			if ((host = strdup(optarg)) == NULL) goto err;
 			break;
 		case 'H':
 			no_host_verification = true;
@@ -148,6 +148,12 @@ main(int argc, char *argv[], char *envp[])
 
 	if (cert_file != NULL)
 		tls_config_set_cert_file(tls_config, cert_file);
+
+	if (no_cert_verification)
+		tls_config_insecure_noverifycert(tls_config);
+
+	if (no_host_verification)
+		tls_config_insecure_noverifyhost(tls_config);
 
 	if (no_verification)
 		tls_config_insecure_noverifycert(tls_config);
