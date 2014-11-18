@@ -37,7 +37,9 @@ char **environ;
 static void
 usage(void)
 {
-	fprintf(stderr, "tlsc [-hN] [-f CAFILE] [-p CAPATH] PROGRAM [ARGS]\n");
+	fprintf(stderr,
+	    "tlsc [-hCHN] [-c cert_file] [-f ca_file] [-p ca_path] "
+	    "program [args...]\n");
 	exit(EXIT_FAILURE);
 }
 
