@@ -2,7 +2,6 @@ include config.mk
 
 DEFINES += -D_XOPEN_SOURCE=700
 DEFINES += -D_BSD_SOURCE
-CFLAGS_SSL=`pkg-config --cflags libssl`
 LIBS_TLS = -ltls `pkg-config --libs libssl`
 
 .PHONY: all clean install dist
@@ -23,9 +22,6 @@ tcpclient: tcpclient.o
 httpc: httpc.o
 	$(CC) -static -o $@ httpc.o
 
-sslc: sslc.o
-	$(CC) -o sslc sslc.o $(LIBS_SSL) $(LIBS_BSD)
-
 tlsc: tlsc.o
 	$(CC) -o tlsc tlsc.o $(LIBS_TLS) $(LIBS_BSD)
 
@@ -33,7 +29,7 @@ tlsc: tlsc.o
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
 clean:
-	rm -rf *.core *.o obj/* socks tcpclient tlsc sslc httpc ucspi-tools-*
+	rm -rf *.core *.o obj/* socks tcpclient tlsc ucspi-tee httpc ucspi-tools-*
 
 install: all
 	mkdir -p ${DESTDIR}${BINDIR}
