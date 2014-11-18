@@ -1,21 +1,27 @@
-# ucspi
+# ucspi-tools
 
-UNIX Client/Server Program Interface
+The ``UNIX Client/Server Program Interface Tool Suite`` is bunch of tools to
+handle UCSPI connections.
 
 ## socks
 
-socks is an ucpi socks client.
-It supports socks version 5.
+*socks* is an ucpi SOCKS client.
+It handles the socks protocol transparently and establishes further connection
+through the corresponding SOCKS server.
+*socks* supports SOCKS version 5.
+
+### TODO:
+ * authentication
+ * server side connections
 
 ## tlsc
 
-**CAUTION: JUST BASIC CERTIFICATE CHECKING IS IMPLEMENTED YET!**
-
-tlsc estableshs an TLS connection and forwards transparently the traffic
-from the following programms.
+*tlsc* establishes an TLS connection and builds an crypto interface between
+the network side and program side of the exec-chain.
+It depends on libtls from LibreSSL.
 
 ### TODO:
- * Hostname check
+ * server side TLS handling
  * Fingerprint accept
  * Revocation check
  * OCSP
@@ -46,3 +52,4 @@ tcpclient www.google.de 80
 ## references
  * [SOCKS Protocol Version 5](http://tools.ietf.org/html/rfc1928)
  * [RFC: Username/Password Authentication for SOCKS V5](https://tools.ietf.org/html/rfc1929)
+ * [LibreSSL](http://www.libressl.org/)
