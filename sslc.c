@@ -16,6 +16,7 @@
 
 #include <errno.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -38,7 +39,7 @@ check_hostname(SSL *ssl, const char *hostname)
 	X509 *cert;
 	char buf[SSL_NAME_LEN];
 	if ((cert = SSL_get_peer_certificate(ssl)) == NULL) return false;
-	
+
 	X509_NAME_get_text_by_NID(
 	    X509_get_subject_name(cert), NID_commonName, buf, sizeof buf);
 
@@ -177,11 +178,13 @@ main(int argc, char *argv[], char *envp[])
 
 	return EXIT_SUCCESS;
  err:
+/*
 	if (ret != 1) {
 		int e = SSL_get_error(ssl, ret);
 		fprintf(stderr, "sslc: ssl error: %d\n", e);
 		ERR_print_errors_fp(stderr);
 	}
+*/
 	perror("sslc");
 	return EXIT_FAILURE;
 }

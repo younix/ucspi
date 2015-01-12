@@ -3,15 +3,16 @@ include config.mk
 DEFINES += -D_XOPEN_SOURCE=700
 DEFINES += -D_BSD_SOURCE
 CFLAGS_SSL=`pkg-config --cflags libssl`
-LIBS_TLS = -ltls `pkg-config --libs libssl`
+LIBS_TLS ?= -ltls `pkg-config --libs libssl`
+LIBS_SSL = `pkg-config --libs libssl openssl`
 
 .PHONY: all clean install dist
 .SUFFIXES: .c .o
 
-all: socks ucspi-tee tlsc httpc
+all: socks sslc
 
 socks: socks.o
-	$(CC) -static -o $@ socks.o $(LIBS_BSD)
+	$(CC) -o $@ socks.o $(LIBS_BSD)
 
 ucspi-tee: ucspi-tee.o
 	$(CC) -static -o $@ ucspi-tee.o
@@ -27,16 +28,19 @@ sslc: sslc.o
 	$(CC) -o sslc sslc.o $(LIBS_SSL) $(LIBS_BSD)
 
 tlsc: tlsc.o
-	$(CC) -o tlsc tlsc.o $(LIBS_TLS) $(LIBS_BSD)
+	$(CC) -o tlsc tlsc.o -lssl $(LIBS_TLS) $(LIBS_BSD)
 
 tlss: tlss.o
 	$(CC) -o tlss tlss.o $(LIBS_TLS) $(LIBS_BSD)
+
+sslc.o: sslc.c
+	$(CC) $(CFLAGS) $(DEFINES) `pkg-config --cflags libssl` -o $@ -c sslc.c
 
 .c.o:
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
 clean:
-	rm -rf *.core *.o obj/* socks tcpclient tlsc sslc httpc ucspi-tools-*
+	rm -rf *.core *.o obj/* socks tcpclient tlsc sslc httpc ucspi-tools-* ucspi-tee
 
 install: all
 	mkdir -p ${DESTDIR}${BINDIR}
