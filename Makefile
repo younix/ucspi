@@ -7,7 +7,7 @@ LIBS_TLS = -ltls `pkg-config --libs libssl`
 .PHONY: all clean install dist
 .SUFFIXES: .c .o
 
-all: socks ucspi-tee tlsc tlss httpc
+all: socks ucspi-tee tlsc httpc
 
 socks: socks.o
 	$(CC) -static -o $@ socks.o $(LIBS_BSD)
