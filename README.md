@@ -26,6 +26,11 @@ It depends on libtls from LibreSSL.
  * Revocation check
  * OCSP
 
+## sslc
+
+sslc is a legacy version of tlsc which just depends on plain old OpenSSL.
+It just contains rudiment certificate checks.
+
 ## examples
 
 Just open a tcp conntection to google.de and make a fetch of
