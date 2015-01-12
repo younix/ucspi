@@ -1,7 +1,7 @@
 # paths
-PREFIX	= /home/younix
+PREFIX	= /usr
 BINDIR	= ${PREFIX}/bin
-MANDIR	= ${PREFIX}/man
+MANDIR	= ${PREFIX}/share/man
 MAN1DIR	= ${MANDIR}/man1/
 
 VERSION = 0.1

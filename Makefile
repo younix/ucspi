@@ -9,20 +9,20 @@ LIBS_SSL = `pkg-config --libs libssl openssl`
 .PHONY: all clean install dist
 .SUFFIXES: .c .o
 
-all: socks sslc
+all: socks sslc httpc ucspi-tee
 
 socks: socks.o
 	$(CC) -o $@ socks.o $(LIBS_BSD)
 
 ucspi-tee: ucspi-tee.o
-	$(CC) -static -o $@ ucspi-tee.o
+	$(CC) -o $@ ucspi-tee.o
 
 # Just for some tests.  Don't use this.
 tcpclient: tcpclient.o
 	$(CC) -static -o $@ tcpclient.o
 
 httpc: httpc.o
-	$(CC) -static -o $@ httpc.o
+	$(CC) -o $@ httpc.o
 
 sslc: sslc.o
 	$(CC) -o sslc sslc.o $(LIBS_SSL) $(LIBS_BSD)
@@ -46,13 +46,22 @@ install: all
 	mkdir -p ${DESTDIR}${BINDIR}
 	mkdir -p ${DESTDIR}${MAN1DIR}
 	install -m 775 socks ${DESTDIR}${BINDIR}
-	install -m 775 tlsc ${DESTDIR}${BINDIR}
+	install -m 775 sslc ${DESTDIR}${BINDIR}
 	install -m 775 ucspi-tee ${DESTDIR}${BINDIR}
+	install -m 775 httpc ${DESTDIR}${BINDIR}
 	install -m 444 socks.1 ${DESTDIR}${MAN1DIR}
 	install -m 444 tlsc.1 ${DESTDIR}${MAN1DIR}
 
 dist: clean
 	mkdir -p ucspi-tools-${VERSION}
-	cp socks.c socks.1 tlsc.c tlsc.1 README.md config.mk Makefile \
+	cp socks.c socks.1 tlsc.c tlsc.1 httpc.c ucspi-tee.c README.md config.mk Makefile \
 	    ucspi-tools-${VERSION}
 	tar czf ucspi-tools-${VERSION}.tar.gz ucspi-tools-${VERSION}
+
+debian: dist
+	dh_make -y -s -i -f ucspi-tools-${VERSION}.tar.gz -p ucspi_${VERSION}
+	rm -f debian/*.ex debian/*.EX debian/README.*
+	fakeroot debian/rules clean
+	fakeroot debian/rules build
+	fakeroot debian/rules binary
+	debuild -b -us -uc
