@@ -1,5 +1,5 @@
 # paths
-PREFIX	= /usr/local
+PREFIX	= /home/younix
 BINDIR	= ${PREFIX}/bin
 MANDIR	= ${PREFIX}/man
 MAN1DIR	= ${MANDIR}/man1/

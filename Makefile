@@ -7,7 +7,7 @@ LIBS_TLS = -ltls `pkg-config --libs libssl`
 .PHONY: all clean install dist
 .SUFFIXES: .c .o
 
-all: socks ucspi-tee tlsc httpc
+all: socks ucspi-tee tlsc tlss httpc
 
 socks: socks.o
 	$(CC) -static -o $@ socks.o $(LIBS_BSD)
@@ -25,6 +25,9 @@ httpc: httpc.o
 tlsc: tlsc.o
 	$(CC) -o tlsc tlsc.o $(LIBS_TLS) $(LIBS_BSD)
 
+tlss: tlss.o
+	$(CC) -o tlss tlss.o $(LIBS_TLS) $(LIBS_BSD)
+
 .c.o:
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
@@ -36,6 +39,7 @@ install: all
 	mkdir -p ${DESTDIR}${MAN1DIR}
 	install -m 775 socks ${DESTDIR}${BINDIR}
 	install -m 775 tlsc ${DESTDIR}${BINDIR}
+	install -m 775 ucspi-tee ${DESTDIR}${BINDIR}
 	install -m 444 socks.1 ${DESTDIR}${MAN1DIR}
 	install -m 444 tlsc.1 ${DESTDIR}${MAN1DIR}
 

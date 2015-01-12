@@ -14,6 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <err.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -33,7 +34,7 @@ char **environ;
 static void
 usage(void)
 {
-	fprintf(stderr, "ucspi-tee PROGRAM [ARGS]\n");
+	fprintf(stderr, "ucspi-tee program [args...]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -104,6 +105,7 @@ main(int argc, char *argv[], char *envp[])
 		if (close(pi[PIPE_WRITE]) < 0) goto err;
 		if (close(po_read) < 0) goto err;
 		execve(prog, argv, environ);
+		err(EXIT_FAILURE, "execve()");
 	case -1:
 		goto err;
 	}
@@ -119,15 +121,18 @@ main(int argc, char *argv[], char *envp[])
 		FD_SET(in, &readfds);
 		FD_SET(sin, &readfds);
 		int max_fd = MAX(in, sin);
-		if (select(max_fd+1, &readfds, NULL, NULL, NULL) == -1) goto err;
+		if (select(max_fd+1, &readfds, NULL, NULL, NULL) == -1)
+			goto err;
 
 		if (FD_ISSET(sin, &readfds)) {
-			if ((n = read(sin, buf, BUFSIZ)) <= 0) goto err;
+			if ((n = read(sin, buf, BUFSIZ)) < 0) goto err;
+			if (n == 0) break;
 			if (write(out, buf, n) < n) goto err; 
 			write(in_fd, "server:\n", 8);
 			if (write(in_fd, buf, n) < n) goto err; 
 		} else if (FD_ISSET(in, &readfds)) {
-			if ((n = read(in, buf, BUFSIZ)) <= 0) goto err;
+			if ((n = read(in, buf, BUFSIZ)) < 0) goto err;
+			if (n == 0) break;
 			if (write(sout, buf, n) < n) goto err; 
 			write(in_fd, "client:\n", 8);
 			if (write(out_fd, buf, n) < n) goto err; 

@@ -129,6 +129,7 @@ main(int argc, char *argv[], char *envp[])
 		if (close(po_read) < 0) goto err;
 		execve(prog, argv, environ);
 	case -1:
+		err(EXIT_FAILURE, "tlsc: fork()");
 		fprintf(stderr, "tlsc: fork\n");
 		goto err;
 	}
