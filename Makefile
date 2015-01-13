@@ -62,8 +62,10 @@ $(TARBALL):
 	@rm -rf $(DISTNAME)
 
 deb: $(TARBALL)
-	dh_make -y -s -i -f $(TARBALL) -p ucspi_${VERSION}
-	rm -f debian/*.ex debian/*.EX debian/README.*
+	#dh_make -y -s -i -f $(TARBALL) -p ucspi_${VERSION}
+	#rm -f debian/*.ex debian/*.EX debian/README.*
+	mkdir debian
+	mv downstream/debian/* debian/
 	fakeroot debian/rules clean
 	fakeroot debian/rules build
 	fakeroot debian/rules binary

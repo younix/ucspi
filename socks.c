@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2013-2015 Jan Klemkow <j.klemkow@wemelug.de>
- * Copyright (c) 2013-2015 Stefan Thiemann <stefanthiemann@icloud.com>
+ * Copyright (c) 2015 Stefan Thiemann <stefanthiemann@icloud.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

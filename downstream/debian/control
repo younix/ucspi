@@ -1,0 +1,13 @@
+Source: ucspi
+Section: misc
+Priority: extra
+Maintainer: Jan Klemkow <j.klemkow@wemelug.de>
+Build-Depends: debhelper (>= 8.0.0), libssl-dev
+Standards-Version: 3.9.3
+Homepage: https://github.com/younix/ucspi/blob/master/README.md
+
+Package: ucspi
+Architecture: all
+Depends: ${misc:Depends}
+Description: The ucspi Tool Suite is bunch of tools to handle UCSPI connections.
+ The UNIX Client/Server Program Interface Tool Suite is bunch of tools to handle UCSPI connections.
