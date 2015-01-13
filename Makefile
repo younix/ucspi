@@ -8,11 +8,12 @@ DEFINES += -D_BSD_SOURCE
 CFLAGS_SSL=`pkg-config --cflags libssl`
 LIBS_TLS ?= -ltls `pkg-config --libs libssl`
 LIBS_SSL = `pkg-config --libs libssl openssl`
+TLS ?= tlsc
 
 .PHONY: all clean install
 .SUFFIXES: .c .o
 
-all: socks tlsc httpc $(TARBALL)
+all: socks httpc $(TLS) $(TARBALL)
 
 socks: socks.o
 	$(CC) -o $@ socks.o $(LIBS_BSD)
