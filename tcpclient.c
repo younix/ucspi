@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <netdb.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,6 +49,7 @@ main(int argc, char*argv[], char *envp[])
 	char *argv0 = argv[0];
 	const char *cause = NULL;
 	environ = envp;
+	bool h_flag = true;
 
 	/* set some default values */
 	memset(&hints, 0, sizeof(hints));
@@ -55,7 +57,7 @@ main(int argc, char*argv[], char *envp[])
 	hints.ai_socktype = SOCK_STREAM;
 
 	/* parsing command line arguments */
-	while ((ch = getopt(argc, argv, "46")) != -1) {
+	while ((ch = getopt(argc, argv, "46Hh")) != -1) {
 		switch (ch) {
 		case '4':
 			if (hints.ai_family == AF_INET6)
@@ -66,6 +68,12 @@ main(int argc, char*argv[], char *envp[])
 			if (hints.ai_family == AF_INET)
 				usage();
 			hints.ai_family = AF_INET6;
+			break;
+		case 'H':
+			h_flag = false;
+			break;
+		case 'h':
+			h_flag = true;
 			break;
 		default:
 			usage();
@@ -103,6 +111,49 @@ main(int argc, char*argv[], char *envp[])
 	if (s == -1) goto err;
 	freeaddrinfo(res0);
 
+	/* prepare environment variables */
+	char local_ip[NI_MAXHOST] = "";
+	char local_host[NI_MAXHOST] = "";
+	char local_port[NI_MAXSERV] = "";
+	char remote_ip[NI_MAXHOST] = "";
+	char remote_host[NI_MAXHOST] = "";
+	char remote_port[NI_MAXSERV] = "";
+
+	struct sockaddr_storage addr;
+	socklen_t addrlen = sizeof addr;
+
+	/* handle remote address information */
+	if (getpeername(s, (struct sockaddr*)&addr, &addrlen) == -1)
+		err(EXIT_FAILURE, "getpeername");
+
+	if (h_flag)
+		getnameinfo((struct sockaddr *)&addr, addrlen, remote_host,
+		    sizeof remote_host, NULL, 0, 0);
+
+	getnameinfo((struct sockaddr *)&addr, addrlen, remote_ip,
+	    sizeof remote_ip, remote_port, sizeof remote_port,
+	    NI_NUMERICHOST | NI_NUMERICSERV);
+
+	/* handle local address information */
+	if (getsockname(s, (struct sockaddr*)&addr, &addrlen) == -1)
+		err(EXIT_FAILURE, "getsockname");
+
+	if (h_flag)
+		getnameinfo((struct sockaddr *)&addr, addrlen, local_host,
+		    sizeof local_host, NULL, 0, 0);
+
+	getnameinfo((struct sockaddr *)&addr, addrlen, local_ip,
+	    sizeof local_ip, local_port, sizeof local_port,
+	    NI_NUMERICHOST | NI_NUMERICSERV);
+
+	if (strcmp(remote_ip  , "") != 0)setenv("TCPREMOTEIP"  , remote_ip  ,1);
+	if (strcmp(remote_port, "") != 0)setenv("TCPREMOTEPORT", remote_port,1);
+	if (strcmp(remote_host, "") != 0)setenv("TCPREMOTEHOST", remote_host,1);
+	if (strcmp(local_ip   , "") != 0)setenv("TCPLOCALIP"   , local_ip   ,1);
+	if (strcmp(local_port , "") != 0)setenv("TCPLOCALPORT" , local_port ,1);
+	if (strcmp(local_host , "") != 0)setenv("TCPLOCALHOST" , local_host ,1);
+
+	/* prepare file descriptors */
 	if (dup2(s, 6) == -1) goto err;
 	if (dup2(s, 7) == -1) goto err;
 	if (close(s) == -1) goto err;
