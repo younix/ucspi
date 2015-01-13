@@ -1,15 +1,18 @@
 include config.mk
 
+DISTNAME := ucspi-tools-${VERSION}
+TARBALL := ${DISTNAME}.tar.gz
+
 DEFINES += -D_XOPEN_SOURCE=700
 DEFINES += -D_BSD_SOURCE
 CFLAGS_SSL=`pkg-config --cflags libssl`
 LIBS_TLS ?= -ltls `pkg-config --libs libssl`
 LIBS_SSL = `pkg-config --libs libssl openssl`
 
-.PHONY: all clean install dist
+.PHONY: all clean install
 .SUFFIXES: .c .o
 
-all: socks sslc httpc ucspi-tee
+all: socks sslc httpc $(TARBALL)
 
 socks: socks.o
 	$(CC) -o $@ socks.o $(LIBS_BSD)
@@ -52,14 +55,15 @@ install: all
 	install -m 444 socks.1 ${DESTDIR}${MAN1DIR}
 	install -m 444 tlsc.1 ${DESTDIR}${MAN1DIR}
 
-dist: clean
-	mkdir -p ucspi-tools-${VERSION}
-	cp socks.c socks.1 tlsc.c tlsc.1 httpc.c ucspi-tee.c README.md config.mk Makefile \
-	    ucspi-tools-${VERSION}
-	tar czf ucspi-tools-${VERSION}.tar.gz ucspi-tools-${VERSION}
+$(TARBALL): clean
+	@mkdir -p $(DISTNAME)
+	@cp socks.c socks.1 tlsc.c tlsc.1 httpc.c ucspi-tee.c README.md \
+	    config.mk Makefile $(DISTNAME)
+	tar czf $(TARBALL) $(DISTNAME)
+	@rm -rf $(DISTNAME)
 
-debian: dist
-	dh_make -y -s -i -f ucspi-tools-${VERSION}.tar.gz -p ucspi_${VERSION}
+debian: $(TARBALL)
+	dh_make -y -s -i -f $(TARBALL) -p ucspi_${VERSION}
 	rm -f debian/*.ex debian/*.EX debian/README.*
 	fakeroot debian/rules clean
 	fakeroot debian/rules build
