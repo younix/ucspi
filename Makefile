@@ -55,7 +55,7 @@ install: all
 	install -m 444 socks.1 ${DESTDIR}${MAN1DIR}
 	install -m 444 tlsc.1 ${DESTDIR}${MAN1DIR}
 
-$(TARBALL): clean
+$(TARBALL):
 	@mkdir -p $(DISTNAME)
 	@cp socks.c socks.1 tlsc.c tlsc.1 httpc.c ucspi-tee.c README.md \
 	    config.mk Makefile $(DISTNAME)
