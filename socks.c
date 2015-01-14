@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2013-2014 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2013-2015 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2013-2015 Stefan Thiemann <stefanthiemann@icloud.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -29,7 +30,7 @@
 #endif
 
 /* enviroment */
-char **environ;
+extern char **environ;
 
 /* uscpi */
 #define WRITE_FD 6
@@ -217,12 +218,12 @@ main(int argc, char *argv[], char *envp[])
 	char *tcp_local_port  = getenv("TCPLOCALPORT");
 	char *tcp_local_host  = getenv("TCPLOCALHOST");
 
-	if (tcp_remote_ip   != NULL)setenv("SOCKSREMOTEIP"  ,tcp_remote_ip  ,1);
-	if (tcp_remote_port != NULL)setenv("SOCKSREMOTEPORT",tcp_remote_port,1);
-	if (tcp_remote_host != NULL)setenv("SOCKSREMOTEHOST",tcp_remote_host,1);
-	if (tcp_local_ip    != NULL)setenv("SOCKSLOCALIP"   ,tcp_local_ip   ,1);
-	if (tcp_local_port  != NULL)setenv("SOCKSLOCALPORT" ,tcp_local_port ,1);
-	if (tcp_local_host  != NULL)setenv("SOCKSLOCALHOST" ,tcp_local_host ,1);
+	if (tcp_remote_ip   != NULL)setenv("SOCKSREMOTEIP"  ,strdup(tcp_remote_ip)  ,1);
+	if (tcp_remote_port != NULL)setenv("SOCKSREMOTEPORT",strdup(tcp_remote_port),1);
+	if (tcp_remote_host != NULL)setenv("SOCKSREMOTEHOST",strdup(tcp_remote_host),1);
+	if (tcp_local_ip    != NULL)setenv("SOCKSLOCALIP"   ,strdup(tcp_local_ip)   ,1);
+	if (tcp_local_port  != NULL)setenv("SOCKSLOCALPORT" ,strdup(tcp_local_port) ,1);
+	if (tcp_local_host  != NULL)setenv("SOCKSLOCALHOST" ,strdup(tcp_local_host) ,1);
 
 	char tmp[BUFSIZ];
 	if (request.atyp == IPv6 || request.atyp == IPv4) {
