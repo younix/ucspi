@@ -14,6 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <err.h>
 #include <fcntl.h>
 #include <libgen.h>
 #include <stdbool.h>
@@ -50,10 +51,13 @@ read_response(FILE *fh)
 {
 	char buf[BUFSIZ];
 
-	if (fgets(buf, sizeof buf, fh) == NULL) return false;
-	
-	while (fgets(buf, sizeof buf, fh) != NULL)
+	//if (fgets(buf, sizeof buf, fh) == NULL) return false;
+
+	fprintf(stderr, "%s: read loop!\n", __func__);
+	while (fgets(buf, sizeof buf, fh) != NULL) {
+		fprintf(stderr, "blub%s\n", buf);
 		if (strcmp(buf, "\r\n")) return true;
+	}
 
 	return false;
 }
@@ -75,6 +79,9 @@ main(int argc, char *argv[])
 	FILE *read_fh = NULL;
 	FILE *write_fh = NULL;
 	int i = 0;
+
+	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
+		err(EXIT_FAILURE, "setvbuf");
 
 	fprintf(stderr, "START httpc\n");
 	fprintf(stderr, "httpc i = %d\n", i++);
@@ -101,9 +108,12 @@ main(int argc, char *argv[])
 		uri = argv[0];
 
 	fprintf(stderr, "httpc i = %d - fdopen\n", i++);
-	if ((read_fh = fdopen(PIPE_READ, "r")) == NULL) goto err;
+	if ((read_fh = fdopen(PIPE_READ, "r")) == NULL)
+		err(EXIT_FAILURE, "fopen");
+
 	fprintf(stderr, "httpc i = %d - fdopen\n", i++);
-	if ((write_fh = fdopen(PIPE_WRITE, "w")) == NULL) goto err;
+	if ((write_fh = fdopen(PIPE_WRITE, "w")) == NULL)
+		err(EXIT_FAILURE, "fopen");
 
 	fprintf(stderr, "httpc i = %d - fprintf\n", i++);
 	/* print request */
@@ -117,9 +127,12 @@ main(int argc, char *argv[])
 	fprintf(stderr, "httpc i = %d - read_response\n", i++);
 	/* get response */
 	read_response(read_fh);
-	if (file == NULL)
-		file = basename(uri);
-	if (output(file) == false) goto err;
+
+	fprintf(stderr, "httpc i = %d - read uri\n", i++);
+
+//	if (file == NULL)
+//		file = basename(uri);
+//	if (output(file) == false) goto err;
 
 	return EXIT_SUCCESS;
  err:

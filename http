@@ -8,12 +8,12 @@
 url=$1
 
 scheme=$(echo $url | sed -nEe 's%(.*)://[^/]*/.*%\1%p')
-host=$(echo $url | sed -nEe 's%.*://([^/]*)/.*%\1%p')
-uri=$(echo $url | sed -nEe 's%.*://[^/]*/(.*)%\1%p')
+host=  $(echo $url | sed -nEe 's%.*://([^/]*)/.*%\1%p')
+uri=   $(echo $url | sed -nEe 's%.*://[^/]*/(.*)%\1%p')
 
 #port=$(echo $host | sed -nEe 's/.*:([[:digit:]]*)$/\1/p')
 #port=$(echo $host | sed -nEe 's/.*:([[:digit:]]*)$/\1/p')
 port=80
 
-echo tcpclient $host 80 httpc $uri
-tcpclient $host $port ./httpc
+echo ./tcpclient $host 80 httpc $uri
+./tcpclient $host $port ./httpc
