@@ -12,7 +12,7 @@ LIBS_SSL = `pkg-config --libs libssl openssl`
 .PHONY: all clean install
 .SUFFIXES: .c .o
 
-all: socks sslc httpc $(TARBALL)
+all: socks tlsc httpc $(TARBALL)
 
 socks: socks.o
 	$(CC) -o $@ socks.o $(LIBS_BSD)
@@ -22,7 +22,7 @@ ucspi-tee: ucspi-tee.o
 
 # Just for some tests.  Don't use this.
 tcpclient: tcpclient.o
-	$(CC) -static -o $@ tcpclient.o
+	$(CC) -o $@ tcpclient.o
 
 httpc: httpc.o
 	$(CC) -o $@ httpc.o
@@ -31,7 +31,7 @@ sslc: sslc.o
 	$(CC) -o sslc sslc.o $(LIBS_SSL) $(LIBS_BSD)
 
 tlsc: tlsc.o
-	$(CC) -o tlsc tlsc.o -lssl $(LIBS_TLS) $(LIBS_BSD)
+	$(CC) -o tlsc tlsc.o $(LIBS_TLS) $(LIBS_BSD)
 
 tlss: tlss.o
 	$(CC) -o tlss tlss.o $(LIBS_TLS) $(LIBS_BSD)
@@ -60,7 +60,7 @@ $(TARBALL):
 	tar czf $(TARBALL) $(DISTNAME)
 	@rm -rf $(DISTNAME)
 
-debian: $(TARBALL)
+deb: $(TARBALL)
 	dh_make -y -s -i -f $(TARBALL) -p ucspi_${VERSION}
 	rm -f debian/*.ex debian/*.EX debian/README.*
 	fakeroot debian/rules clean

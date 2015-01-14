@@ -10,7 +10,7 @@ endif
 # MacOSX
 ifeq "$(OS)" "Darwin"
 	DEFINES := -D_DARWIN_C_SOURCE
-	LIBS_TLS := `pkg-config --libs libtls`
+	LIBS_TLS := -lcrypto `pkg-config --libs libtls libssl`
 endif
 
 include Makefile
