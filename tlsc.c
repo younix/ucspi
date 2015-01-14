@@ -172,7 +172,7 @@ main(int argc, char *argv[], char *envp[])
 		err(EXIT_FAILURE, "tls_configure");
 
 	if (tls_connect_fds(tls, sin, sout, host) != 0)
-		err(EXIT_FAILURE, "tls_connect_fds");
+		goto err;
 
 	/* communication loop */
 	for (;;) {
