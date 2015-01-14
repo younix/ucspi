@@ -46,10 +46,8 @@ usage(void)
 int
 main(int argc, char *argv[], char *envp[])
 {
-#ifndef __APPLE__
 	int e;
 	char buf[BUFSIZ];
-#endif
 	struct tls *tls = NULL;
 	int ch;
 	environ = envp;
@@ -209,11 +207,9 @@ main(int argc, char *argv[], char *envp[])
 
 	return EXIT_SUCCESS;
  err:
-#ifndef __APPLE__
 	while ((e = ERR_get_error())) {
 		ERR_error_string(e, buf);
 		fprintf(stderr, " %s\n", buf);
 	}
-#endif
 	err(EXIT_FAILURE, "%s", tls_error(tls));
 }

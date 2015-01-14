@@ -1,5 +1,5 @@
 # paths
-PREFIX	= /usr
+PREFIX	?= /usr
 BINDIR	= ${PREFIX}/bin
 MANDIR	= ${PREFIX}/share/man
 MAN1DIR	= ${MANDIR}/man1/
