@@ -4,7 +4,7 @@ BINDIR	= ${PREFIX}/bin
 MANDIR	= ${PREFIX}/share/man
 MAN1DIR	= ${MANDIR}/man1/
 
-VERSION = 0.1
+VERSION = 1.0
 
 # compiler
 CC	    = cc
