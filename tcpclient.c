@@ -34,7 +34,7 @@ char **environ;
 void
 usage(void)
 {
-	fprintf(stderr, "tcpclient [-4|6] host port program [args]\n");
+	fprintf(stderr, "tcpclient [-4|6] [-Hh] host port program [args]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -42,7 +42,7 @@ int
 main(int argc, char*argv[], char *envp[])
 {
 	struct addrinfo hints, *res, *res0;
-	int error;
+	int error = 0;
 	int save_errno;
 	int s;
 	int ch;
@@ -90,7 +90,7 @@ main(int argc, char*argv[], char *envp[])
 
 	error = getaddrinfo(host, port, &hints, &res0);
 	if (error)
-		errx(1, "%s", gai_strerror(error));
+		errx(EXIT_FAILURE, "%s", gai_strerror(error));
 	s = -1;
 	for (res = res0; res; res = res->ai_next) {
 		s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -127,24 +127,28 @@ main(int argc, char*argv[], char *envp[])
 		err(EXIT_FAILURE, "getpeername");
 
 	if (h_flag)
-		getnameinfo((struct sockaddr *)&addr, addrlen, remote_host,
-		    sizeof remote_host, NULL, 0, 0);
+		if ((error = getnameinfo((struct sockaddr *)&addr, addrlen,
+		    remote_host, sizeof remote_host, NULL, 0, 0)) != 0)
+			errx(EXIT_FAILURE, "%s", gai_strerror(error));
 
-	getnameinfo((struct sockaddr *)&addr, addrlen, remote_ip,
+	if ((error = getnameinfo((struct sockaddr *)&addr, addrlen, remote_ip,
 	    sizeof remote_ip, remote_port, sizeof remote_port,
-	    NI_NUMERICHOST | NI_NUMERICSERV);
+	    NI_NUMERICHOST | NI_NUMERICSERV)) != 0)
+		errx(EXIT_FAILURE, "%s", gai_strerror(error));
 
 	/* handle local address information */
 	if (getsockname(s, (struct sockaddr*)&addr, &addrlen) == -1)
 		err(EXIT_FAILURE, "getsockname");
 
 	if (h_flag)
-		getnameinfo((struct sockaddr *)&addr, addrlen, local_host,
-		    sizeof local_host, NULL, 0, 0);
+		if ((error = getnameinfo((struct sockaddr *)&addr, addrlen,
+		    local_host, sizeof local_host, NULL, 0, 0)) != 0)
+			errx(EXIT_FAILURE, "%s", gai_strerror(error));
 
-	getnameinfo((struct sockaddr *)&addr, addrlen, local_ip,
+	if ((error = getnameinfo((struct sockaddr *)&addr, addrlen, local_ip,
 	    sizeof local_ip, local_port, sizeof local_port,
-	    NI_NUMERICHOST | NI_NUMERICSERV);
+	    NI_NUMERICHOST | NI_NUMERICSERV)) != 0)
+		errx(EXIT_FAILURE, "%s", gai_strerror(error));
 
 	if (strcmp(remote_ip  , "") != 0)setenv("TCPREMOTEIP"  , remote_ip  ,1);
 	if (strcmp(remote_port, "") != 0)setenv("TCPREMOTEPORT", remote_port,1);
@@ -154,11 +158,12 @@ main(int argc, char*argv[], char *envp[])
 	if (strcmp(local_host , "") != 0)setenv("TCPLOCALHOST" , local_host ,1);
 
 	/* prepare file descriptors */
-	if (dup2(s, 6) == -1) goto err;
-	if (dup2(s, 7) == -1) goto err;
-	if (close(s) == -1) goto err;
+	if (dup2(s, 6) == -1) err(EXIT_FAILURE, "dup2");
+	if (dup2(s, 7) == -1) err(EXIT_FAILURE, "dup2");
+	if (close(s) == -1) err(EXIT_FAILURE, "close");
 
 	execve(prog, argv, environ);
+	err(EXIT_FAILURE, "execve");
  err:
 	perror(argv0);
 	return EXIT_FAILURE;
