@@ -50,8 +50,6 @@ install: all
 	mkdir -p ${DESTDIR}${MAN1DIR}
 	install -m 775 socks ${DESTDIR}${BINDIR}
 	install -m 775 sslc ${DESTDIR}${BINDIR}
-	install -m 775 ucspi-tee ${DESTDIR}${BINDIR}
-	install -m 775 httpc ${DESTDIR}${BINDIR}
 	install -m 444 socks.1 ${DESTDIR}${MAN1DIR}
 	install -m 444 tlsc.1 ${DESTDIR}${MAN1DIR}
 
