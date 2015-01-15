@@ -47,12 +47,12 @@ clean:
 	rm -rf *.core *.o obj/* socks tcpclient tlsc sslc httpc ucspi-tools-* ucspi-tee
 
 install: all
-	mkdir -p ${DESTDIR}${BINDIR}
-	mkdir -p ${DESTDIR}${MAN1DIR}
-	install -m 775 socks ${DESTDIR}${BINDIR}
-	install -m 775 ${TLS} ${DESTDIR}${BINDIR}
-	install -m 444 socks.1 ${DESTDIR}${MAN1DIR}
-	install -m 444 tlsc.1 ${DESTDIR}${MAN1DIR}
+	mkdir -p ${BINDIR}
+	mkdir -p ${MAN1DIR}
+	install -m 775 socks ${BINDIR}
+	install -m 775 ${TLS} ${BINDIR}
+	install -m 444 socks.1 ${MAN1DIR}
+	install -m 444 tlsc.1 ${MAN1DIR}
 
 $(TARBALL):
 	@mkdir -p $(DISTNAME)
