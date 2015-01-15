@@ -13,7 +13,7 @@ TLS ?= tlsc
 .PHONY: all clean install
 .SUFFIXES: .c .o
 
-all: socks httpc $(TLS) $(TARBALL)
+all: socks $(TLS) $(TARBALL)
 
 socks: socks.o
 	$(CC) -o $@ socks.o $(LIBS_BSD)
