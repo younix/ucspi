@@ -123,7 +123,7 @@ main(int argc, char *argv[])
 		fprintf(write_fh, "Host: %s\r\n", host);
 
 	fprintf(write_fh, "\r\n");
-
+	fflush(write_fh);
 	fprintf(stderr, "httpc i = %d - read_response\n", i++);
 	/* get response */
 	read_response(read_fh);
