@@ -23,8 +23,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#define PIPE_WRITE 6
-#define PIPE_READ 7
+#define PIPE_READ 6
+#define PIPE_WRITE 7
 
 enum method {GET, HEAD};
 enum encoding {CHUNKED, GZIP};
