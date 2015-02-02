@@ -33,8 +33,8 @@
 extern char **environ;
 
 /* uscpi */
-#define WRITE_FD 6
-#define READ_FD 7
+#define READ_FD 6
+#define WRITE_FD 7
 
 /* negotiation fields */
 #define SOCKSv5 0x05

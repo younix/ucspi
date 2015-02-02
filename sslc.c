@@ -70,8 +70,8 @@ main(int argc, char *argv[], char *envp[])
 	int out = STDOUT_FILENO;
 
 	/* pipes to communicate with the back end */
-	int sout = 6;
-	int sin = 7;
+	int sin = 6;
+	int sout = 7;
 
 	char *ca_file = NULL;
 	char *ca_path = NULL;
@@ -121,8 +121,8 @@ main(int argc, char *argv[], char *envp[])
 		if ((po_read = dup(po[PIPE_READ])) < 0) goto err;
 		if (close(po[PIPE_READ]) < 0) goto err;
 
-		if (dup2(pi[PIPE_WRITE], 6) < 0) goto err;
-		if (dup2(po_read, 7) < 0) goto err;
+		if (dup2(pi[PIPE_WRITE], 7) < 0) goto err;
+		if (dup2(po_read, 6) < 0) goto err;
 
 		if (close(pi[PIPE_WRITE]) < 0) goto err;
 		if (close(po_read) < 0) goto err;
