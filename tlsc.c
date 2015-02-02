@@ -194,6 +194,8 @@ main(int argc, char *argv[], char *envp[])
 				ret = tls_read(tls, buf, sizeof buf, &n);
 				if (ret == TLS_READ_AGAIN)
 					goto again;
+				if (ret == 0)
+					fprintf(stderr, "tls_read(): 0: EOF?\n");
 				if (ret == -1)
 					goto err;
 				if (write(out, buf, n) == -1)
@@ -202,6 +204,8 @@ main(int argc, char *argv[], char *envp[])
 		} else if (FD_ISSET(in, &readfds)) {
 			if ((sn = read(in, buf, sizeof buf)) == -1)
 				err(EXIT_FAILURE, "read()");
+			if (sn == 0)
+				err(EXIT_FAILURE, "read(): 0: EOF from inside");
 			ret = tls_write(tls, buf, sn, (size_t*)&sn);
 		}
 	}
@@ -212,5 +216,5 @@ main(int argc, char *argv[], char *envp[])
 		ERR_error_string(e, buf);
 		fprintf(stderr, " %s\n", buf);
 	}
-	err(EXIT_FAILURE, "%s", tls_error(tls));
+	err(EXIT_FAILURE, "tls_error: %s", tls_error(tls));
 }
