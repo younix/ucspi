@@ -33,30 +33,6 @@ struct header {
 	size_t content_length;
 };
 
-static bool
-output(char *file, FILE *fh)
-{
-	int fd = STDOUT_FILENO;
-	size_t size;
-	char buf[BUFSIZ];
-
-	fprintf(stderr, "output()\n");
-
-	if (strcmp(file, "-") != 0 && strcmp(file, "/"))
-		if ((fd = open(file, O_WRONLY)) == -1) return false;
-
-	while ((size = fread(buf, sizeof buf, 1, fh)) > 0) {
-		fprintf(stderr, "output(): %zd\n", size);
-		if (write(fd, buf, size) == -1) return false;
-	}
-
-	if (size == -1)
-		return false;
-
-	if (close(fd) == -1) return false;
-	return true;
-}
-
 void
 parse_header_line(char *line, struct header *header)
 {
@@ -71,18 +47,45 @@ parse_header_line(char *line, struct header *header)
 	}
 }
 
-static bool
+static char *
 read_response(struct header *header)
 {
 	char buf[BUFSIZ];
+	enum state {HEADER_STATE, BODY_STATE};
+	enum state state = HEADER_STATE;
+	size_t off = 0;
+	ssize_t size = 0;
 
-	while (read(PIPE_READ, buf, sizeof buf) > 0) {
+	while ((size = read(PIPE_READ, buf + off, sizeof(buf) - off)) > 0) {
 		fprintf(stderr, "head: %s", buf);
-		char *eol = strstr(buf, "\r\n");
-		eol = '\0';
-		char *line = buf;
-		parse_header_line(buf, header);
-		if (strcmp(buf, "\r\n")) return true;
+		char *line, *next = buf;
+
+		switch (state) {
+		case HEADER_STATE:
+			line = strsep(&next, "\n");
+
+			if (next == NULL) { /* reached EOL */
+				strlcpy(buf, line, sizeof buf);
+				off = strlen(line);
+				continue;
+			}
+
+			parse_header_line(line, header);
+
+			if (strncmp(next, "\r\n", 2) == 0) {
+				state = BODY_STATE;
+				next+=2;
+			} else if(strncmp(next, "\n", 1) == 0) {
+				state = BODY_STATE;
+				next++;
+			} else {
+				break;
+			}
+		case BODY_STATE:
+			write(STDOUT_FILENO, buf, size);
+			break;
+		};
+
 	}
 
 	return false;
@@ -102,8 +105,6 @@ main(int argc, char *argv[])
 	char *host = getenv("TCPREMOTEHOST");
 	char *file = NULL;
 	char *uri = "/";
-	FILE *read_fh = NULL;
-	FILE *write_fh = NULL;
 
 	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
 		err(EXIT_FAILURE, "setvbuf");
@@ -128,26 +129,28 @@ main(int argc, char *argv[])
 	if (argc > 0)
 		uri = argv[0];
 
-	if ((read_fh = fdopen(PIPE_READ, "r")) == NULL)
-		err(EXIT_FAILURE, "fopen");
-
-	if ((write_fh = fdopen(PIPE_WRITE, "w")) == NULL)
-		err(EXIT_FAILURE, "fopen");
-
+	char buf[BUFSIZ];
 	/* print request */
-	fprintf(write_fh, "GET %s HTTP/1.1\r\n", uri);
+	//fprintf(write_fh, "GET %s HTTP/1.1\r\n", uri);
+	snprintf(buf, sizeof buf, "GET %s HTTP/1.1\r\n", uri);
+	write(PIPE_WRITE, buf, strnlen(buf, sizeof buf));
 
-	if (host != NULL)
-		fprintf(write_fh, "Host: %s\r\n", host);
+	if (host != NULL) {
+		//fprintf(write_fh, "Host: %s\r\n", host);
+		snprintf(buf, sizeof buf, "Host: %s\r\n", host);
+		write(PIPE_WRITE, buf, strnlen(buf, sizeof buf));
+	}
 
-	fprintf(write_fh, "\r\n");
-	fflush(write_fh);
+	//fprintf(write_fh, "\r\n");
+	write(PIPE_WRITE, "\r\n", 2);
+
 	/* get response */
-	read_response_header(read_fh);
+	struct header header;
+	read_response(&header);
 
 	if (file == NULL)
 		file = basename(uri);
-	if (output(file, read_fh) == false) goto err;
+//	if (output(file, read_fh) == false) goto err;
 
 	return EXIT_SUCCESS;
  err:
