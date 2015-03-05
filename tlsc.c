@@ -65,7 +65,7 @@ main(int argc, char *argv[], char *envp[])
 	char *ca_path = NULL;
 	char *cert_file = NULL;
 	bool no_verification = false;
-	bool no_host_verification = false;
+	bool no_name_verification = false;
 	bool no_cert_verification = false;
 	char *host = getenv("TCPREMOTEHOST");
 	struct tls_config *tls_config;
@@ -85,7 +85,7 @@ main(int argc, char *argv[], char *envp[])
 			if ((host = strdup(optarg)) == NULL) goto err;
 			break;
 		case 'H':
-			no_host_verification = true;
+			no_name_verification = true;
 			break;
 		case 'C':
 			no_cert_verification = true;
@@ -154,8 +154,8 @@ main(int argc, char *argv[], char *envp[])
 	if (no_cert_verification)
 		tls_config_insecure_noverifycert(tls_config);
 
-	if (no_host_verification)
-		tls_config_insecure_noverifyhost(tls_config);
+	if (no_name_verification)
+		tls_config_insecure_noverifyname(tls_config);
 
 	if (no_verification)
 		tls_config_insecure_noverifycert(tls_config);
