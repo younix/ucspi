@@ -22,8 +22,8 @@ ucspi-tee: ucspi-tee.o
 	$(CC) -o $@ ucspi-tee.o
 
 # Just for some tests.  Don't use this.
-tcpclient: tcpclient.o
-	$(CC) -o $@ tcpclient.o
+tcpc: tcpc.o
+	$(CC) -o $@ tcpc.o
 
 tcps: tcps.o
 	$(CC) -o $@ tcps.o
@@ -47,7 +47,7 @@ sslc.o: sslc.c
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
 clean:
-	rm -rf *.core *.o obj/* socks tcpclient tlsc sslc httpc ucspi-tools-* ucspi-tee
+	rm -rf *.core *.o obj/* socks tcpc tcps tlsc sslc httpc ucspi-tools-* ucspi-tee
 
 install: all
 	mkdir -p ${BINDIR}
