@@ -25,6 +25,9 @@ ucspi-tee: ucspi-tee.o
 tcpclient: tcpclient.o
 	$(CC) -o $@ tcpclient.o
 
+tcps: tcps.o
+	$(CC) -o $@ tcps.o
+
 httpc: httpc.o
 	$(CC) -o $@ httpc.o
 
