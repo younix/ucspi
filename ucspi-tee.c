@@ -19,8 +19,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <sys/select.h>
 
@@ -28,13 +28,17 @@
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 #endif
 
+/* ucspi */
+#define READ_FD 6
+#define WRITE_FD 7
+
 /* enviroment */
 char **environ;
 
 static void
 usage(void)
 {
-	fprintf(stderr, "ucspi-tee program [args...]\n");
+	fprintf(stderr, "ucspi-tee program [args]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -45,8 +49,8 @@ main(int argc, char *argv[], char *envp[])
 	environ = envp;
 
 	/* pipes to communicate with the front end */
-	int in = STDIN_FILENO;
-	int out = STDOUT_FILENO;
+	int in = -1;
+	int out = -1;
 
 	/* pipes to communicate with the back end */
 	int sin = 6;
@@ -87,7 +91,11 @@ main(int argc, char *argv[], char *envp[])
 	if (pipe(pi) < 0) goto err;
 	if (pipe(po) < 0) goto err;
 	switch (fork()) {
+	case -1:
+		err(EXIT_FAILURE, "fork");
 	case 0: /* start client program */
+
+		/* close unused pipe ends */
 		if (close(pi[PIPE_READ]) < 0) goto err;
 		if (close(po[PIPE_WRITE]) < 0) goto err;
 
@@ -99,16 +107,19 @@ main(int argc, char *argv[], char *envp[])
 		if ((po_read = dup(po[PIPE_READ])) < 0) goto err;
 		if (close(po[PIPE_READ]) < 0) goto err;
 
-		if (dup2(pi[PIPE_WRITE], 7) < 0) goto err;
-		if (dup2(po_read, 6) < 0) goto err;
+		if (dup2(pi[PIPE_WRITE], WRITE_FD) < 0) goto err;
+		if (dup2(po_read, READ_FD) < 0) goto err;
 
 		if (close(pi[PIPE_WRITE]) < 0) goto err;
 		if (close(po_read) < 0) goto err;
 		execve(prog, argv, environ);
 		err(EXIT_FAILURE, "execve()");
-	case -1:
-		goto err;
+	default: break;
 	}
+
+	/* close unused pipe ends */
+	if (close(pi[PIPE_WRITE]) < 0) goto err;
+	if (close(po[PIPE_READ]) < 0) goto err;
 
 	in = pi[PIPE_READ];
 	out = po[PIPE_WRITE];

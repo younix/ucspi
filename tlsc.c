@@ -203,8 +203,6 @@ main(int argc, char *argv[], char *envp[])
 				ret = tls_read(tls, buf, sizeof buf, &n);
 				if (ret == TLS_READ_AGAIN)
 					goto again;
-				if (ret == 0)
-					fprintf(stderr, "tls_read(): 0: EOF?\n");
 				if (ret == -1)
 					goto err;
 				if (write(out, buf, n) == -1)
