@@ -32,6 +32,9 @@
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 #endif
 
+#define READ_FD 6
+#define WRITE_FD 7
+
 /* enviroment */
 char **environ;
 
@@ -54,12 +57,8 @@ main(int argc, char *argv[], char *envp[])
 	environ = envp;
 
 	/* pipes to communicate with the front end */
-	int in = STDIN_FILENO;
-	int out = STDOUT_FILENO;
-
-	/* pipes to communicate with the back end */
-	int sout = 7;
-	int sin = 6;
+	int in = -1;
+	int out = -1;
 
 	char *ca_file = NULL;
 	char *ca_path = NULL;
@@ -106,34 +105,43 @@ main(int argc, char *argv[], char *envp[])
 	char *prog = argv[0];
 #	define PIPE_READ 0
 #	define PIPE_WRITE 1
-	int pi[2];
-	int po[2];
-	if (pipe(pi) < 0) goto err;
-	if (pipe(po) < 0) goto err;
+	int pi[2];	/* input pipe */
+	int po[2];	/* output pipe */
+	if (pipe(pi) == -1) err(EXIT_FAILURE, "pipe");
+	if (pipe(po) == -1) err(EXIT_FAILURE, "pipe");
+
 	switch (fork()) {
-	case 0: /* start client program */
-		if (close(pi[PIPE_READ]) < 0) goto err;
-		if (close(po[PIPE_WRITE]) < 0) goto err;
+	case -1:
+		err(EXIT_FAILURE, "fork");
+	case 0: /* client program */
+
+		/* close non-using ends of pipes */
+		if (close(pi[PIPE_READ]) == -1) err(EXIT_FAILURE, "close");
+		if (close(po[PIPE_WRITE]) == -1) err(EXIT_FAILURE, "close");
 
 		/*
 		 * We have to move one descriptor cause po[] may
 		 * overlaps with descriptor 6 and 7.
 		 */
 		int po_read = 0;
-		if ((po_read = dup(po[PIPE_READ])) < 0) goto err;
-		if (close(po[PIPE_READ]) < 0) goto err;
+		if ((po_read = dup(po[PIPE_READ])) == -1)
+			err(EXIT_FAILURE, "dup");
+		if (close(po[PIPE_READ]) < 0) err(EXIT_FAILURE, "close");
 
-		if (dup2(pi[PIPE_WRITE], 7) < 0) goto err;
-		if (dup2(po_read, 6) < 0) goto err;
+		if (dup2(pi[PIPE_WRITE], WRITE_FD) < 0)
+			err(EXIT_FAILURE, "dup2");
+		if (dup2(po_read, READ_FD) < 0) err(EXIT_FAILURE, "dup2");
 
-		if (close(pi[PIPE_WRITE]) < 0) goto err;
-		if (close(po_read) < 0) goto err;
+		if (close(pi[PIPE_WRITE]) < 0) err(EXIT_FAILURE, "close");
+		if (close(po_read) < 0) err(EXIT_FAILURE, "close");
 		execve(prog, argv, environ);
-	case -1:
-		err(EXIT_FAILURE, "tlsc: fork()");
-		fprintf(stderr, "tlsc: fork\n");
-		goto err;
+		err(EXIT_FAILURE, "execve");
+	default: break;	/* parent */
 	}
+
+	/* close non-using ends of pipes */
+	if (close(pi[PIPE_WRITE]) == -1) err(EXIT_FAILURE, "close");
+	if (close(po[PIPE_READ]) == -1) err(EXIT_FAILURE, "close");
 
 	in = pi[PIPE_READ];
 	out = po[PIPE_WRITE];
@@ -170,7 +178,7 @@ main(int argc, char *argv[], char *envp[])
 	if (tls_configure(tls, tls_config) != 0)
 		err(EXIT_FAILURE, "tls_configure");
 
-	if (tls_connect_fds(tls, sin, sout, host) != 0)
+	if (tls_connect_fds(tls, READ_FD, WRITE_FD, host) == -1)
 		goto err;
 
 	/* communication loop */
@@ -182,13 +190,14 @@ main(int argc, char *argv[], char *envp[])
 		fd_set readfds;
 		FD_ZERO(&readfds);
 		FD_SET(in, &readfds);
-		FD_SET(sin, &readfds);
-		int max_fd = MAX(in, sin);
+		FD_SET(READ_FD, &readfds);
+		int max_fd = MAX(in, READ_FD);
 
 		ret = select(max_fd+1, &readfds, NULL, NULL, NULL);
-		if (ret == -1) goto err;
+		if (ret == -1)
+			err(EXIT_FAILURE, "select");
 
-		if (FD_ISSET(sin, &readfds)) {
+		if (FD_ISSET(READ_FD, &readfds)) {
 			do {
  again:
 				ret = tls_read(tls, buf, sizeof buf, &n);
@@ -216,5 +225,5 @@ main(int argc, char *argv[], char *envp[])
 		ERR_error_string(e, buf);
 		fprintf(stderr, " %s\n", buf);
 	}
-	err(EXIT_FAILURE, "tls_error: %s", tls_error(tls));
+	errx(EXIT_FAILURE, "tls_error: %s", tls_error(tls));
 }
