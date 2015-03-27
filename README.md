@@ -23,6 +23,7 @@ It depends on libtls from LibreSSL.
 ### TODO:
  * server side TLS handling
  * Fingerprint accept
+   * list of fingerprints in dot files.
  * Revocation check
  * OCSP
 
@@ -53,6 +54,10 @@ alias:
 alias tcpclient="tcpclient 127.0.0.1 8080 socks"
 tcpclient www.google.de 80
 ```
+
+## TODOS
+ * http-proxy tool
+ * smtp-client
 
 ## references
  * [SOCKS Protocol Version 5](http://tools.ietf.org/html/rfc1928)
