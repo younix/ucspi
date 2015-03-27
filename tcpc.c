@@ -17,6 +17,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <arpa/inet.h>
 
 #include <err.h>
 #include <errno.h>
@@ -30,6 +31,51 @@
 
 /* enviroment */
 char **environ;
+
+int
+set_local_addr(int s, int family, char *local_addr_str, char *local_port_str)
+{
+	struct sockaddr_storage ia;
+	struct sockaddr_in *sa4 = (struct sockaddr_in *)&ia;
+	struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)&ia;
+	socklen_t slen = 0;
+	int local_port = 0;
+
+	if (local_port_str != NULL) {
+		local_port = strtol(local_port_str, NULL, 0);
+		if (errno != 0)
+			err(EXIT_FAILURE, "strtol");
+	}
+
+	memset(&ia, 0, sizeof ia);
+	ia.ss_family = family;
+
+	switch (ia.ss_family) {
+	case PF_INET:
+		slen = sizeof *sa4;
+		sa4->sin_port = htons(local_port);
+		break;
+	case PF_INET6:
+		slen = sizeof *sa6;
+		sa6->sin6_port = htons(local_port);
+		break;
+	default:
+		errx(EXIT_FAILURE, "unknown protocol family: %d", family);
+	}
+
+	if (local_addr_str != NULL) {
+		int ret = 0;
+		ret = inet_pton(ia.ss_family, local_addr_str,
+		    ia.ss_family == PF_INET ? &sa4->sin_addr : &sa6->sin6_addr);
+		if (ret == -1)
+			err(EXIT_FAILURE, "inet_pton");
+
+		if (ret == 0)
+			errx(EXIT_FAILURE, "unable to parse local ip address");
+	}
+
+	return bind(s, (struct sockaddr *)&ia, slen);
+}
 
 void
 usage(void)
@@ -56,8 +102,11 @@ main(int argc, char*argv[], char *envp[])
 	hints.ai_family = PF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
+	char *local_addr_str = NULL;
+	char *local_port_str = NULL;
+
 	/* parsing command line arguments */
-	while ((ch = getopt(argc, argv, "46Hh")) != -1) {
+	while ((ch = getopt(argc, argv, "46Hhi:p:")) != -1) {
 		switch (ch) {
 		case '4':
 			if (hints.ai_family == AF_INET6)
@@ -74,6 +123,14 @@ main(int argc, char*argv[], char *envp[])
 			break;
 		case 'h':
 			h_flag = true;
+			break;
+		case 'i':
+			if ((local_addr_str = strdup(optarg)) == NULL)
+				err(EXIT_FAILURE, "strdup");
+			break;
+		case 'p':
+			if ((local_port_str = strdup(optarg)) == NULL)
+				err(EXIT_FAILURE, "strdup");
 			break;
 		default:
 			usage();
@@ -98,6 +155,19 @@ main(int argc, char*argv[], char *envp[])
 			cause = "socket";
 			continue;
 		}
+
+		/* set local address information */
+		if (local_addr_str != NULL || local_port_str != NULL)
+			if (set_local_addr(s, res->ai_family, local_addr_str,
+			   local_port_str) == -1) {
+				cause = "bind";
+				save_errno = errno;
+				close(s);
+				errno = save_errno;
+				s = -1;
+				continue;
+			}
+
 		if (connect(s, res->ai_addr, res->ai_addrlen) == -1) {
 			cause = "connect";
 			save_errno = errno;
