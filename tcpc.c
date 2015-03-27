@@ -156,6 +156,7 @@ main(int argc, char*argv[], char *envp[])
 	if (strcmp(local_ip   , "") != 0)setenv("TCPLOCALIP"   , local_ip   ,1);
 	if (strcmp(local_port , "") != 0)setenv("TCPLOCALPORT" , local_port ,1);
 	if (strcmp(local_host , "") != 0)setenv("TCPLOCALHOST" , local_host ,1);
+	setenv("PROTO", "TCP", 1);
 
 	/* prepare file descriptors */
 	if (dup2(s, 6) == -1) err(EXIT_FAILURE, "dup2");
