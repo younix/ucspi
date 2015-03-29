@@ -47,7 +47,8 @@ sslc.o: sslc.c
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
 clean:
-	rm -rf *.core *.o obj/* socks tcpc tcps tlsc sslc httpc ucspi-tools-* ucspi-tee
+	rm -rf *.core *.o obj/* socks tcpc tcps tlsc sslc httpc ucspi-tools-* \
+	    ucspi-tee *.pem
 
 install: all
 	mkdir -p ${BINDIR}
@@ -73,3 +74,13 @@ deb: $(TARBALL)
 	fakeroot debian/rules build
 	fakeroot debian/rules binary
 	debuild -b -us -uc
+
+# Tests
+key.pem:
+	openssl genrsa -out $@ 2048
+
+csr.pem: key.pem openssl.cf
+	openssl req -new -key key.pem -config openssl.cf -out $@
+
+crt.pem: csr.pem key.pem
+	openssl x509 -req -in csr.pem -signkey key.pem -out $@
