@@ -90,6 +90,9 @@ main(int argc, char *argv[])
 	if (tls_accept_fds(tls, &cctx, STDIN_FILENO, STDOUT_FILENO) == -1)
 		goto err;
 
+	if (setenv("PROTO", "SSL", 1) == -1)
+		err(EXIT_FAILURE, "setenv");
+
 	/* fork front end program */
 	char *prog = argv[0];
 #	define PIPE_READ 0
@@ -151,20 +154,24 @@ main(int argc, char *argv[])
 				ret = tls_read(cctx, buf, sizeof buf, &n);
 				if (ret == TLS_READ_AGAIN)
 					goto again;
-				if (ret == -1)
-					goto err;
+				if (ret == -1) /* XXX: unable to detect EOF */
+					goto out;
 				if (write(out, buf, n) == -1)
 					err(EXIT_FAILURE, "write()");
 			} while (n == sizeof buf);
 		} else if (FD_ISSET(in, &readfds)) {
 			if ((sn = read(in, buf, sizeof buf)) == -1)
 				err(EXIT_FAILURE, "read()");
-			if (sn == 0)
-				err(EXIT_FAILURE, "read(): 0: EOF from inside");
-			ret = tls_write(cctx, buf, sn, (size_t*)&sn);
+			if (sn == 0) /* EOF from inside */
+				goto out;
+			/* XXX: unable to detect disconnect here */
+			if (tls_write(cctx, buf, sn, (size_t *)&sn) == -1)
+				goto out;
 		}
 	}
 
+ out:
+	tls_close(cctx);
 	return EXIT_SUCCESS;
  err:
 	while ((e = ERR_get_error())) {

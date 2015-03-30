@@ -208,7 +208,7 @@ main(int argc, char *argv[], char *envp[])
 				ret = tls_read(tls, buf, sizeof buf, &n);
 				if (ret == TLS_READ_AGAIN)
 					goto again;
-				if (ret == -1) /* unable to detect EOF here */
+				if (ret == -1) /* XXX: unable to detect EOF */
 					goto out;
 				if (write(out, buf, n) == -1)
 					err(EXIT_FAILURE, "write()");
