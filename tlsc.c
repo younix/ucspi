@@ -101,6 +101,46 @@ main(int argc, char *argv[], char *envp[])
 	if (argc < 1)
 		usage();
 
+	if ((tls_config = tls_config_new()) == NULL)
+		err(EXIT_FAILURE, "tls_config_new");
+
+	/* verification settings */
+	if (ca_file != NULL)
+		tls_config_set_ca_file(tls_config, ca_file);
+
+	if (ca_path != NULL)
+		tls_config_set_ca_path(tls_config, ca_path);
+
+	if (cert_file != NULL)
+		tls_config_set_cert_file(tls_config, cert_file);
+
+	if (no_cert_verification)
+		tls_config_insecure_noverifycert(tls_config);
+
+	if (no_name_verification)
+		tls_config_insecure_noverifyname(tls_config);
+
+	if (no_verification)
+		tls_config_insecure_noverifycert(tls_config);
+
+	/* libtls setup */
+	if (tls_init() != 0)
+		err(EXIT_FAILURE, "tls_init");
+
+	if ((tls = tls_client()) == NULL)
+		err(EXIT_FAILURE, "tls_client");
+
+	if (tls_configure(tls, tls_config) != 0)
+		err(EXIT_FAILURE, "tls_configure");
+
+	if (tls_connect_fds(tls, READ_FD, WRITE_FD, host) == -1)
+		goto err;
+
+	/* overide PROTO to signal the application layer that the communication
+	 * channel is save. */
+	if (setenv("PROTO", "SSL", 1) == -1)
+		err(EXIT_FAILURE, "setenv");
+
 	/* fork front end program */
 	char *prog = argv[0];
 #	define PIPE_READ 0
@@ -146,41 +186,6 @@ main(int argc, char *argv[], char *envp[])
 	in = pi[PIPE_READ];
 	out = po[PIPE_WRITE];
 
-	if ((tls_config = tls_config_new()) == NULL)
-		err(EXIT_FAILURE, "tls_config_new");
-
-	/* verification settings */
-	if (ca_file != NULL)
-		tls_config_set_ca_file(tls_config, ca_file);
-
-	if (ca_path != NULL)
-		tls_config_set_ca_path(tls_config, ca_path);
-
-	if (cert_file != NULL)
-		tls_config_set_cert_file(tls_config, cert_file);
-
-	if (no_cert_verification)
-		tls_config_insecure_noverifycert(tls_config);
-
-	if (no_name_verification)
-		tls_config_insecure_noverifyname(tls_config);
-
-	if (no_verification)
-		tls_config_insecure_noverifycert(tls_config);
-
-	/* libtls setup */
-	if (tls_init() != 0)
-		err(EXIT_FAILURE, "tls_init");
-
-	if ((tls = tls_client()) == NULL)
-		err(EXIT_FAILURE, "tls_client");
-
-	if (tls_configure(tls, tls_config) != 0)
-		err(EXIT_FAILURE, "tls_configure");
-
-	if (tls_connect_fds(tls, READ_FD, WRITE_FD, host) == -1)
-		goto err;
-
 	/* communication loop */
 	for (;;) {
 		int ret;
@@ -203,8 +208,8 @@ main(int argc, char *argv[], char *envp[])
 				ret = tls_read(tls, buf, sizeof buf, &n);
 				if (ret == TLS_READ_AGAIN)
 					goto again;
-				if (ret == -1)
-					goto err;
+				if (ret == -1) /* unable to detect EOF here */
+					goto out;
 				if (write(out, buf, n) == -1)
 					err(EXIT_FAILURE, "write()");
 			} while (n == sizeof buf);
@@ -212,11 +217,16 @@ main(int argc, char *argv[], char *envp[])
 			if ((sn = read(in, buf, sizeof buf)) == -1)
 				err(EXIT_FAILURE, "read()");
 			if (sn == 0)
-				err(EXIT_FAILURE, "read(): 0: EOF from inside");
-			ret = tls_write(tls, buf, sn, (size_t*)&sn);
+				goto out;
+			if ((ret = tls_write(tls, buf, sn, (size_t*)&sn)) == -1)
+				err(EXIT_FAILURE, "tls_write");
+			else
+				err(EXIT_FAILURE, "else tls_write");
 		}
 	}
-
+ out:
+	fprintf(stderr, "tls_close\n");
+	tls_close(tls);
 	return EXIT_SUCCESS;
  err:
 	while ((e = ERR_get_error())) {
