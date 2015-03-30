@@ -82,6 +82,7 @@ start_prog(struct sock *sock, char *prog, char *argv[])
 	set_env("TCPLOCALIP"  , sock->ip);
 	set_env("TCPLOCALHOST", sock->host);
 	set_env("TCPLOCALPORT", sock->serv);
+	set_env("PROTO", "TCP");
 
 	/* prepare file descriptors */
 	if (dup2(s, STDIN_FILENO) == -1) err(EXIT_FAILURE, "dup2");
