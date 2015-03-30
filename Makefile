@@ -10,7 +10,7 @@ LIBS_TLS ?= -ltls `pkg-config --libs libssl`
 LIBS_SSL = `pkg-config --libs libssl openssl`
 TLS ?= tlsc
 
-.PHONY: all clean install
+.PHONY: all test clean install
 .SUFFIXES: .c .o
 
 all: socks $(TLS) $(TARBALL)
@@ -47,8 +47,8 @@ sslc.o: sslc.c
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
 clean:
-	rm -rf *.core *.o obj/* socks tcpc tcps tlsc sslc httpc ucspi-tools-* \
-	    ucspi-tee *.pem
+	rm -rf *.core *.o obj/* socks tcpc tcps tlsc tlss sslc httpc \
+	    ucspi-tools-* ucspi-tee *.pem
 
 install: all
 	mkdir -p ${BINDIR}
@@ -75,7 +75,10 @@ deb: $(TARBALL)
 	fakeroot debian/rules binary
 	debuild -b -us -uc
 
-# Tests
+test: tcps tcpc tlss tlsc crt.pem
+	./test.sh
+
+# Create Key for Tests
 key.pem:
 	openssl genrsa -out $@ 2048
 
