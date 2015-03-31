@@ -5,9 +5,8 @@ handle UCSPI connections.
 
 ## socks
 
-*socks* is an ucpi SOCKS client.
-It handles the socks protocol transparently and establishes further connection
-through the corresponding SOCKS server.
+*socks* is an ucpi SOCKS client.  It handles the socks protocol transparently
+and establishes further connection through the corresponding SOCKS server.
 *socks* supports SOCKS version 5.
 
 ### TODO:
@@ -16,26 +15,28 @@ through the corresponding SOCKS server.
 
 ## tlsc
 
-*tlsc* establishes an TLS connection and builds an crypto interface between
-the network side and program side of the exec-chain.
-It depends on libtls from LibreSSL.
+*tlsc* establishes an TLS connection and builds an crypto interface between the
+network side and program side of the exec-chain.  It depends on libtls from
+LibreSSL.
 
 ### TODO:
- * server side TLS handling
  * Fingerprint accept
    * list of fingerprints in dot files.
  * Revocation check
  * OCSP
 
+## tlss
+
+*tlss* accepts server side tls connections.  It also uses libtls for encryption.
+
 ## sslc
 
-sslc is a legacy version of tlsc which just depends on plain old OpenSSL.
-It just contains rudiment certificate checks.
+sslc is a legacy version of tlsc which just depends on plain old OpenSSL.  It
+just contains rudiment certificate checks.
 
 ## examples
 
-Just open a tcp conntection to google.de and make a fetch of
-the start page.
+Just open a tcp conntection to google.de and make a fetch of the start page.
 
 ```shell
 tcpclient www.google.de 80 http www.google.de
