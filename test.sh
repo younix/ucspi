@@ -39,7 +39,7 @@ file_grep $tmpdir/env.txt "^TCPLOCALPORT=$SERVER_PORT\$"
 file_grep $tmpdir/env.txt "^PROTO=TCP\$"
 
 #########################################################################
-# plain client to server communication				#
+# plain client to server communication					#
 #########################################################################
 CLIENT_PORT=$(($RANDOM % 65536 + 1024))
 SERVER_PORT=$(($RANDOM % 65536 + 1024))
