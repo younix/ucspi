@@ -218,14 +218,11 @@ main(int argc, char *argv[], char *envp[])
 				err(EXIT_FAILURE, "read()");
 			if (sn == 0)
 				goto out;
-			if ((ret = tls_write(tls, buf, sn, (size_t*)&sn)) == -1)
-				err(EXIT_FAILURE, "tls_write");
-			else
-				err(EXIT_FAILURE, "else tls_write");
+			if (tls_write(tls, buf, sn, (size_t*)&sn) == -1)
+				goto out;
 		}
 	}
  out:
-	fprintf(stderr, "tls_close\n");
 	tls_close(tls);
 	return EXIT_SUCCESS;
  err:
