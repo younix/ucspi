@@ -208,9 +208,12 @@ main(int argc, char *argv[], char *envp[])
 				ret = tls_read(tls, buf, sizeof buf, &n);
 				if (ret == TLS_READ_AGAIN)
 					goto again;
-				if (ret == -1) /* XXX: unable to detect EOF */
+				/* XXX: unable to detect EOF */
+				if (ret == -1 || n == 0)
 					goto out;
-				if (write(out, buf, n) == -1)
+				if ((ret = write(out, buf, n)) == -1)
+					err(EXIT_FAILURE, "write()");
+				if (ret == 0)
 					err(EXIT_FAILURE, "write()");
 			} while (n == sizeof buf);
 		} else if (FD_ISSET(in, &readfds)) {
