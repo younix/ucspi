@@ -66,7 +66,8 @@ set_local_addr(int s, int family, char *local_addr_str, char *local_port_str)
 	if (local_addr_str != NULL) {
 		int ret = 0;
 		ret = inet_pton(ia.ss_family, local_addr_str,
-		    ia.ss_family == PF_INET ? &sa4->sin_addr : &sa6->sin6_addr);
+		    ia.ss_family == PF_INET ?  (void*)&sa4->sin_addr :
+			(void*)&sa6->sin6_addr);
 		if (ret == -1)
 			err(EXIT_FAILURE, "inet_pton");
 

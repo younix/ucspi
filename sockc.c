@@ -33,8 +33,8 @@
 extern char **environ;
 
 /* uscpi */
-#define READ_FD STDIN_FILENO
-#define WRITE_FD STDOUT_FILENO
+#define READ_FD 6
+#define WRITE_FD 7
 
 /* negotiation fields */
 #define SOCKSv5 0x05
@@ -117,28 +117,6 @@ usage(void)
 }
 
 int
-read_request(struct request *request)
-{
-	read(READ_FD, request, 4);
-
-	if (request.atyp == IPv6) {
-		read(READ_FD, &request.addr.ip6, 16);
-	} else if (request.atyp == IPv4) {
-		read(READ_FD, &request.addr.ip4, 4);
-	} else if (request.atyp == BIND) {
-		read(READ_FD, &request.addr.name.len, \
-		    sizeof request.addr.name.len);
-		read(READ_FD, request.addr.name.str, request.addr.name.len);
-	} else {
-		/* XXX: send err */
-		perror("this should not happen");
-	}
-
-	/* socks: send requested port */
-	if (read(READ_FD, &request.port, sizeof request.port) == -1) goto err;
-}
-
-int
 main(int argc, char *argv[], char *envp[])
 {
 	struct nego nego = {SOCKSv5, 1, NO_AUTH};
@@ -159,10 +137,10 @@ main(int argc, char *argv[], char *envp[])
 	argc -= optind;
 	argv += optind;
 
-//	if (argc < 3) usage();
-//	char *host = *argv; argv++; argc--;
-//	char *port = *argv; argv++; argc--;
-//	char *prog = *argv; /* argv[0] == program name */
+	if (argc < 3) usage();
+	char *host = *argv; argv++; argc--;
+	char *port = *argv; argv++; argc--;
+	char *prog = *argv; /* argv[0] == program name */
 
 	if (strlen(host) > 255)
 		perror("socks: hostname is too long");

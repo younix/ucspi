@@ -13,7 +13,10 @@ TLS ?= tlsc
 .PHONY: all test clean install
 .SUFFIXES: .c .o
 
-all: socks $(TLS) $(TARBALL)
+all: sockc $(TLS) $(TARBALL)
+
+sockc: sockc.o
+	$(CC) -o $@ sockc.o $(LIBS_BSD)
 
 socks: socks.o
 	$(CC) -o $@ socks.o $(LIBS_BSD)
@@ -42,6 +45,9 @@ tlss: tlss.o
 
 sslc.o: sslc.c
 	$(CC) $(CFLAGS) $(DEFINES) `pkg-config --cflags libssl` -o $@ -c sslc.c
+
+splice: splice.o
+	$(CC) $(CFLAGS) -o $@ splice.o
 
 .c.o:
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
