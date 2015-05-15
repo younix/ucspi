@@ -53,20 +53,20 @@ splice: splice.o
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
 clean:
-	rm -rf *.core *.o obj/* socks tcpc tcps tlsc tlss sslc httpc \
+	rm -rf *.core *.o obj/* socks sockc tcpc tcps tlsc tlss sslc httpc \
 	    ucspi-tools-* ucspi-tee *.pem
 
 install: all
 	mkdir -p ${BINDIR}
 	mkdir -p ${MAN1DIR}
-	install -m 775 socks ${BINDIR}
+	install -m 775 sockc ${BINDIR}
 	install -m 775 ${TLS} ${BINDIR}
-	install -m 444 socks.1 ${MAN1DIR}
+	install -m 444 sockc.1 ${MAN1DIR}
 	install -m 444 tlsc.1 ${MAN1DIR}
 
 $(TARBALL):
 	@mkdir -p $(DISTNAME)
-	@cp socks.c socks.1 tlsc.c tlsc.1 httpc.c ucspi-tee.c README.md \
+	@cp sockc.c sockc.1 tlsc.c tlsc.1 httpc.c ucspi-tee.c README.md \
 	    config.mk Makefile $(DISTNAME)
 	tar czf $(TARBALL) $(DISTNAME)
 	@rm -rf $(DISTNAME)

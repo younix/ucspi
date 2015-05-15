@@ -1,12 +1,12 @@
 .Dd $Mdocdate$
-.Dt SOCKS 1
+.Dt SOCKC 1
 .Sh NAME
-.Nm socks
-.Nd UCSPI socks proxy client
+.Nm sockc
+.Nd UCSPI sockc proxy client
 .Sh SYNOPSIS
 .Nm tcpclient
 .Ar proxy-host
-.Ar proxy-port Nm socks
+.Ar proxy-port Nm sockc
 .Ar host
 .Ar port
 .Ar program
@@ -19,7 +19,7 @@ It communicates with tcpclient over pipes with filedescriptor 6 and 7.
 tcpclient connects to the socks proxy and delegates the further protocol
 handling to
 .Nm socks .
-socks talks with the socks proxy and initiates a tcp connection to
+sockc talks with the socks proxy and initiates a tcp connection to
 .Ar host
 with
 .Ar port .
@@ -32,13 +32,13 @@ with
 .Sh ENVIRONMENT
 The following environment variables are defined in the UCPSI specification.
 By the usage of
-.Nm socks
+.Nm sockc
 there are two TCP connections.
 One from the
 .Nm tcpclient
 to the socks proxy and an other from the socks proxy to the server.
 The
-.Nm socks
+.Nm sockc
 programm tries to handel this in a transparant way for the program.
 All variables which are set from tcpclient to describe the TCP connection
 between program and proxy are overwritten with the description of the TCP
