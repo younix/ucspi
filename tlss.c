@@ -151,11 +151,12 @@ main(int argc, char *argv[])
 		if (FD_ISSET(READ_FD, &readfds)) {
 			do {
  again:
-				ret = tls_read(cctx, buf, sizeof buf, &n);
-				if (ret == TLS_READ_AGAIN)
+				sn = tls_read(cctx, buf, sizeof buf);
+				if (sn == TLS_WANT_POLLIN ||
+				    sn == TLS_WANT_POLLOUT)
 					goto again;
 				/* XXX: unable to detect EOF */
-				if (ret == -1 || n == 0)
+				if (sn == -1 || sn == 0)
 					goto out;
 				if (write(out, buf, n) == -1)
 					err(EXIT_FAILURE, "write()");
@@ -166,7 +167,7 @@ main(int argc, char *argv[])
 			if (sn == 0) /* EOF from inside */
 				goto out;
 			/* XXX: unable to detect disconnect here */
-			if (tls_write(cctx, buf, sn, (size_t *)&sn) == -1)
+			if (tls_write(cctx, buf, sn) == -1)
 				goto out;
 		}
 	}

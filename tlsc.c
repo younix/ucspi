@@ -205,13 +205,14 @@ main(int argc, char *argv[], char *envp[])
 		if (FD_ISSET(READ_FD, &readfds)) {
 			do {
  again:
-				ret = tls_read(tls, buf, sizeof buf, &n);
-				if (ret == TLS_READ_AGAIN)
+				sn = tls_read(tls, buf, sizeof buf);
+				if (sn == TLS_WANT_POLLIN ||
+				    sn == TLS_WANT_POLLOUT)
 					goto again;
 				/* XXX: unable to detect EOF */
-				if (ret == -1 || n == 0)
+				if (sn == -1 || sn == 0)
 					goto out;
-				if ((ret = write(out, buf, n)) == -1)
+				if ((ret = write(out, buf, sn)) == -1)
 					err(EXIT_FAILURE, "write()");
 				if (ret == 0)
 					err(EXIT_FAILURE, "write()");
@@ -221,7 +222,7 @@ main(int argc, char *argv[], char *envp[])
 				err(EXIT_FAILURE, "read()");
 			if (sn == 0)
 				goto out;
-			if (tls_write(tls, buf, sn, (size_t*)&sn) == -1)
+			if ((sn = tls_write(tls, buf, sn)) == -1)
 				goto out;
 		}
 	}
