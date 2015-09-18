@@ -136,6 +136,9 @@ main(int argc, char *argv[], char *envp[])
 	if (tls_connect_fds(tls, READ_FD, WRITE_FD, host) == -1)
 		goto err;
 
+	if (tls_handshake(tls) == -1)
+		goto err;
+
 	/* overide PROTO to signal the application layer that the communication
 	 * channel is save. */
 	if (setenv("PROTO", "SSL", 1) == -1)

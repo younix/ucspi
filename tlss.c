@@ -90,6 +90,9 @@ main(int argc, char *argv[])
 	if (tls_accept_fds(tls, &cctx, STDIN_FILENO, STDOUT_FILENO) == -1)
 		goto err;
 
+	if (tls_handshake(cctx) == -1)
+		goto err;
+
 	if (setenv("PROTO", "SSL", 1) == -1)
 		err(EXIT_FAILURE, "setenv");
 
@@ -137,6 +140,7 @@ main(int argc, char *argv[])
 		int ret;
 		char buf[BUFSIZ];
 		ssize_t sn = 0;
+		ssize_t n = 0;
 		fd_set readfds;
 		FD_ZERO(&readfds);
 		FD_SET(in, &readfds);
@@ -168,7 +172,7 @@ main(int argc, char *argv[])
 				goto out;
 			/* XXX: unable to detect disconnect here */
 			if (tls_write(cctx, buf, sn) == -1)
-				goto out;
+				goto err;
 		}
 	}
 
@@ -180,5 +184,6 @@ main(int argc, char *argv[])
 		ERR_error_string(e, buf);
 		fprintf(stderr, " %s\n", buf);
 	}
+	errx(EXIT_FAILURE, "tls_error: %s", tls_error(cctx));
 	errx(EXIT_FAILURE, "tls_error: %s", tls_error(tls));
 }
