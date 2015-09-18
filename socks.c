@@ -116,27 +116,33 @@ usage(void)
 	exit(EXIT_FAILURE);
 }
 
+#if 0
 int
 read_request(struct request *request)
 {
 	read(READ_FD, request, 4);
 
-	if (request.atyp == IPv6) {
-		read(READ_FD, &request.addr.ip6, 16);
-	} else if (request.atyp == IPv4) {
-		read(READ_FD, &request.addr.ip4, 4);
-	} else if (request.atyp == BIND) {
-		read(READ_FD, &request.addr.name.len, \
-		    sizeof request.addr.name.len);
-		read(READ_FD, request.addr.name.str, request.addr.name.len);
+	if (request->atyp == IPv6) {
+		read(READ_FD, &request->addr.ip6, 16);
+	} else if (request->atyp == IPv4) {
+		read(READ_FD, &request->addr.ip4, 4);
+	} else if (request->atyp == BIND) {
+		read(READ_FD, &request->addr.name.len, \
+		    sizeof request->addr.name.len);
+		read(READ_FD, request->addr.name.str, request->addr.name.len);
 	} else {
 		/* XXX: send err */
 		perror("this should not happen");
 	}
 
 	/* socks: send requested port */
-	if (read(READ_FD, &request.port, sizeof request.port) == -1) goto err;
+	if (read(READ_FD, &request->port, sizeof request->port) == -1) goto err;
+
+	return 0;
+ err:
+	return -1;
 }
+#endif
 
 int
 main(int argc, char *argv[], char *envp[])
@@ -159,10 +165,10 @@ main(int argc, char *argv[], char *envp[])
 	argc -= optind;
 	argv += optind;
 
-//	if (argc < 3) usage();
-//	char *host = *argv; argv++; argc--;
-//	char *port = *argv; argv++; argc--;
-//	char *prog = *argv; /* argv[0] == program name */
+	if (argc < 3) usage();
+	char *host = *argv; argv++; argc--;
+	char *port = *argv; argv++; argc--;
+	char *prog = *argv; /* argv[0] == program name */
 
 	if (strlen(host) > 255)
 		perror("socks: hostname is too long");
