@@ -8,7 +8,7 @@ DEFINES += -D_BSD_SOURCE
 CFLAGS_SSL=`pkg-config --cflags libssl`
 LIBS_TLS ?= -ltls `pkg-config --libs libssl`
 LIBS_SSL = `pkg-config --libs libssl openssl`
-TLS ?= tlsc
+TLS ?= tlsc tlss
 
 .PHONY: all test clean install
 .SUFFIXES: .c .o
