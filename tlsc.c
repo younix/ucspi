@@ -209,14 +209,14 @@ main(int argc, char *argv[], char *envp[])
 				if (sn == TLS_WANT_POLLIN ||
 				    sn == TLS_WANT_POLLOUT)
 					goto again;
-				/* XXX: unable to detect EOF */
-				if (sn == -1 || sn == 0)
-					goto out;
-				if ((ret = write(out, buf, sn)) == -1)
+				if (sn == -1)
+					goto err;
+				if (sn == 0)
+					return EXIT_SUCCESS;
+
+				if (write(out, buf, sn) == -1)
 					err(EXIT_FAILURE, "write()");
-				if (ret == 0)
-					err(EXIT_FAILURE, "write()");
-			} while (n == sizeof buf);
+			} while (sn == sizeof buf);
 		} else if (FD_ISSET(in, &readfds)) {
 			if ((sn = read(in, buf, sizeof buf)) == -1)
 				err(EXIT_FAILURE, "read()");

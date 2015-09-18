@@ -136,7 +136,6 @@ main(int argc, char *argv[])
 	for (;;) {
 		int ret;
 		char buf[BUFSIZ];
-		size_t n = 0;
 		ssize_t sn = 0;
 		fd_set readfds;
 		FD_ZERO(&readfds);
@@ -155,12 +154,13 @@ main(int argc, char *argv[])
 				if (sn == TLS_WANT_POLLIN ||
 				    sn == TLS_WANT_POLLOUT)
 					goto again;
-				/* XXX: unable to detect EOF */
-				if (sn == -1 || sn == 0)
-					goto out;
-				if (write(out, buf, n) == -1)
+				if (sn == -1)
+					goto err;
+				if (sn == 0)
+					return EXIT_SUCCESS;
+				if (write(out, buf, sn) == -1)
 					err(EXIT_FAILURE, "write()");
-			} while (n == sizeof buf);
+			} while (sn == sizeof buf);
 		} else if (FD_ISSET(in, &readfds)) {
 			if ((sn = read(in, buf, sizeof buf)) == -1)
 				err(EXIT_FAILURE, "read()");
