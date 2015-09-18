@@ -193,7 +193,6 @@ main(int argc, char *argv[], char *envp[])
 	for (;;) {
 		int ret;
 		char buf[BUFSIZ];
-		size_t n = 0;
 		ssize_t sn = 0;
 		fd_set readfds;
 		FD_ZERO(&readfds);
