@@ -54,7 +54,7 @@ splice: splice.o
 
 clean:
 	rm -rf *.core *.o obj/* socks sockc tcpc tcps tlsc tlss sslc httpc \
-	    ucspi-tools-* ucspi-tee *.pem
+	    ucspi-tools-* ucspi-tee *.pem *.trace
 
 install: all
 	mkdir -p ${BINDIR}
