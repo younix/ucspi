@@ -1,4 +1,9 @@
 *.o
 *.swp
 *.core
-socks
+*.key
+*.csr
+*.crt
+sockc
+tlsc
+tlss
