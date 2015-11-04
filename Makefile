@@ -54,7 +54,7 @@ splice: splice.o
 
 clean:
 	rm -rf *.core *.o obj/* socks sockc tcpc tcps tlsc tlss sslc httpc \
-	    ucspi-tools-* ucspi-tee *.pem *.trace
+	    ucspi-tools-* ucspi-tee *.key *.csr *.crt *.trace
 
 install: all
 	mkdir -p ${BINDIR}
@@ -81,15 +81,4 @@ deb: $(TARBALL)
 	fakeroot debian/rules binary
 	debuild -b -us -uc
 
-test: tcps tcpc tlss tlsc crt.pem
-	./test.sh
-
-# Create Key for Tests
-key.pem:
-	openssl genrsa -out $@ 2048
-
-csr.pem: key.pem openssl.cf
-	openssl req -new -key key.pem -config openssl.cf -out $@
-
-crt.pem: csr.pem key.pem
-	openssl x509 -req -in csr.pem -signkey key.pem -out $@
+include tests.mk
