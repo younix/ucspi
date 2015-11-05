@@ -60,25 +60,33 @@ main(int argc, char *argv[], char *envp[])
 	int in = -1;
 	int out = -1;
 
-	char *ca_file = NULL;
-	char *ca_path = NULL;
-	char *cert_file = NULL;
 	bool no_verification = false;
 	bool no_name_verification = false;
 	bool no_cert_verification = false;
+	bool no_time_verification = false;
 	char *host = getenv("TCPREMOTEHOST");
 	struct tls_config *tls_config;
 
-	while ((ch = getopt(argc, argv, "c:f:p:n:HCh")) != -1) {
+	if ((tls_config = tls_config_new()) == NULL)
+		err(EXIT_FAILURE, "tls_config_new");
+
+	while ((ch = getopt(argc, argv, "c:k:f:p:n:HCTh")) != -1) {
 		switch (ch) {
 		case 'c':
-			if ((cert_file = strdup(optarg)) == NULL) goto err;
+			if (tls_config_set_cert_file(tls_config, optarg) == -1)
+				err(EXIT_FAILURE, "tls_config_set_cert_file");
+			break;
+		case 'k':
+			if (tls_config_set_key_file(tls_config, optarg) == -1)
+				err(EXIT_FAILURE, "tls_config_set_key_file");
 			break;
 		case 'f':
-			if ((ca_file = strdup(optarg)) == NULL) goto err;
+			if (tls_config_set_ca_file(tls_config, optarg) == -1)
+				err(EXIT_FAILURE, "tls_config_set_ca_file");
 			break;
 		case 'p':
-			if ((ca_path = strdup(optarg)) == NULL) goto err;
+			if (tls_config_set_ca_path(tls_config, optarg) == -1)
+				err(EXIT_FAILURE, "tls_config_set_ca_path");
 			break;
 		case 'n':
 			if ((host = strdup(optarg)) == NULL) goto err;
@@ -88,6 +96,9 @@ main(int argc, char *argv[], char *envp[])
 			break;
 		case 'C':
 			no_cert_verification = true;
+			break;
+		case 'T':
+			no_time_verification  = true;
 			break;
 		case 'h':
 		default:
@@ -101,19 +112,7 @@ main(int argc, char *argv[], char *envp[])
 	if (argc < 1)
 		usage();
 
-	if ((tls_config = tls_config_new()) == NULL)
-		err(EXIT_FAILURE, "tls_config_new");
-
 	/* verification settings */
-	if (ca_file != NULL)
-		tls_config_set_ca_file(tls_config, ca_file);
-
-	if (ca_path != NULL)
-		tls_config_set_ca_path(tls_config, ca_path);
-
-	if (cert_file != NULL)
-		tls_config_set_cert_file(tls_config, cert_file);
-
 	if (no_cert_verification)
 		tls_config_insecure_noverifycert(tls_config);
 
@@ -122,6 +121,9 @@ main(int argc, char *argv[], char *envp[])
 
 	if (no_verification)
 		tls_config_insecure_noverifycert(tls_config);
+
+	if (no_time_verification)
+		tls_config_insecure_noverifytime(tls_config);
 
 	/* libtls setup */
 	if (tls_init() != 0)

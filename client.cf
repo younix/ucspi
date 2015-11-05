@@ -8,5 +8,5 @@ ST		= Test State or Province
 L		= Test Locality
 O		= Organization Name
 OU		= Organizational Unit Name
-CN		= localhost
-emailAddress	= test@email.address
+CN		= user
+emailAddress	= user@localhost

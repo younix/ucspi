@@ -66,11 +66,11 @@ file_grep $tmpdir/env.txt "^PROTO=TCP\$"
 #########################################################################
 CLIENT_PORT=$(($RANDOM % 65536 + 1024))
 SERVER_PORT=$(($RANDOM % 65536 + 1024))
-./tcps 127.0.0.1 $SERVER_PORT			\
-	./tlss -c server.crt -k server.key	\
+./tcps 127.0.0.1 $SERVER_PORT				\
+	./tlss -f ca.crt -c server.crt -k server.key	\
 	./read.sh "0" "$tmpdir/env.txt" &
-./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT	\
-	./tlsc -C				\
+./tcpc -p $CLIENT_PORT localhost $SERVER_PORT		\
+	./tlsc -f ca.crt -c client.crt -k client.key	\
 	./write.sh
 
 ok $? "tls connection client -> server"
@@ -91,11 +91,11 @@ file_grep $tmpdir/env.txt "^PROTO=SSL\$"
 #########################################################################
 CLIENT_PORT=$(($RANDOM % 65536 + 1024))
 SERVER_PORT=$(($RANDOM % 65536 + 1024))
-./tcps 127.0.0.1 $SERVER_PORT			\
-	./tlss -c server.crt -k server.key	\
+./tcps 127.0.0.1 $SERVER_PORT				\
+	./tlss -C -f ca.crt -c server.crt -k server.key	\
 	/usr/bin/env &
-./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT	\
-	./tlsc -C				\
+./tcpc -p $CLIENT_PORT localhost $SERVER_PORT		\
+	./tlsc    -f ca.crt -c client.crt -k client.key	\
 	./read.sh "6" "$tmpdir/env.txt"
 
 ok $? "tls connection server -> client"

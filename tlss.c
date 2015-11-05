@@ -34,7 +34,8 @@
 void
 usage(void)
 {
-	fprintf(stderr, "tlss [-c cert_file] [-k key_file] prog [args]\n");
+	fprintf(stderr, "tlss [-C] [-c cert_file] [-k key_file] [-p ca_path] "
+	    "[-f ca_file] prog [args]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -44,21 +45,33 @@ main(int argc, char *argv[])
 	struct tls *tls = NULL;
 	struct tls *cctx = NULL;
 	struct tls_config *tls_config = NULL;
-	char *cert_file = NULL;
-	char *key_file = NULL;
 	char buf[BUFSIZ];
 	int ch;
 	int e;
 
-	while ((ch = getopt(argc, argv, "c:k:")) != -1) {
+	if ((tls_config = tls_config_new()) == NULL)
+		err(EXIT_FAILURE, "tls_config_new");
+
+	while ((ch = getopt(argc, argv, "Cc:k:p:f:")) != -1) {
 		switch (ch) {
+		case 'C':
+			tls_config_verify_client(tls_config);
+			break;
 		case 'c':
-			if ((cert_file = strdup(optarg)) == NULL)
-				err(EXIT_FAILURE, "strdup");
+			if (tls_config_set_cert_file(tls_config, optarg) == -1)
+				err(EXIT_FAILURE, "tls_config_set_cert_file");
 			break;
 		case 'k':
-			if ((key_file = strdup(optarg)) == NULL)
-				err(EXIT_FAILURE, "strdup");
+			if (tls_config_set_key_file(tls_config, optarg) == -1)
+				err(EXIT_FAILURE, "tls_config_set_key_file");
+			break;
+		case 'f':
+			if (tls_config_set_ca_file(tls_config, optarg) == -1)
+				err(EXIT_FAILURE, "tls_config_set_ca_file");
+			break;
+		case 'p':
+			if (tls_config_set_ca_path(tls_config, optarg) == -1)
+				err(EXIT_FAILURE, "tls_config_set_ca_path");
 			break;
 		default:
 			usage();
@@ -74,15 +87,6 @@ main(int argc, char *argv[])
 
 	if ((tls = tls_server()) == NULL)
 		err(EXIT_FAILURE, "tls_server");
-
-	if ((tls_config = tls_config_new()) == NULL)
-		err(EXIT_FAILURE, "tls_config_new");
-
-	if (tls_config_set_key_file(tls_config, key_file) == -1)
-		err(EXIT_FAILURE, "tls_config_set_key_file");
-
-	if (tls_config_set_cert_file(tls_config, cert_file) == -1)
-		err(EXIT_FAILURE, "tls_config_set_cert_file");
 
 	if (tls_configure(tls, tls_config) == -1)
 		goto err;
