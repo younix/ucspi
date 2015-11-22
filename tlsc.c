@@ -66,6 +66,21 @@ main(int argc, char *argv[], char *envp[])
 	char *host = getenv("TCPREMOTEHOST");
 	struct tls_config *tls_config;
 
+	if (getenv("TLSC_NO_VERIFICATION") != NULL) {
+		no_name_verification = true;
+		no_cert_verification = true;
+		no_time_verification = true;
+	}
+
+	if (getenv("TLSC_NO_HOST_VERIFICATION") != NULL)
+		no_name_verification = true;
+
+	if (getenv("TLSC_NO_CERT_VERIFICATION") != NULL)
+		no_cert_verification = true;
+
+	if (getenv("TLSC_NO_TIME_VERIFICATION") != NULL)
+		no_time_verification = true;
+
 	if ((tls_config = tls_config_new()) == NULL)
 		err(EXIT_FAILURE, "tls_config_new");
 
