@@ -1,6 +1,6 @@
 # this Makefile creates files which are needed for tests
 
-KEYLEN=1024
+KEYLEN=4096
 
 test: tcps tcpc tlss tlsc server.crt client.crt ca.crt
 	./test.sh
@@ -15,6 +15,9 @@ client.csr: client.key client.cf
 client.crt: client.csr ca.crt
 	openssl x509 -req -in client.csr -out $@ \
 	    -CAcreateserial -CAkey ca.key -CA ca.crt
+# create pkcs12 version of the client key for import browser
+client.p12: client.crt client.key
+	openssl pkcs12 -export -clcerts -in client.crt -inkey client.key -out $@
 
 # create server key ############################################################
 server.key:
