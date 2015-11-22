@@ -60,7 +60,6 @@ main(int argc, char *argv[], char *envp[])
 	int in = -1;
 	int out = -1;
 
-	bool no_verification = false;
 	bool no_name_verification = false;
 	bool no_cert_verification = false;
 	bool no_time_verification = false;
@@ -118,9 +117,6 @@ main(int argc, char *argv[], char *envp[])
 
 	if (no_name_verification)
 		tls_config_insecure_noverifyname(tls_config);
-
-	if (no_verification)
-		tls_config_insecure_noverifycert(tls_config);
 
 	if (no_time_verification)
 		tls_config_insecure_noverifytime(tls_config);
