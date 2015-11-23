@@ -6,7 +6,7 @@
 .Nd UCSPI TLS Client
 .Sh SYNOPSIS
 .Nm tcpclient Ar host Ar port Nm tlsc
-.Op Fl hCHT
+.Op Fl hCHTV
 .Op Fl n Ar hostname
 .Op Fl c Ar cert_file
 .Op Fl f Ar ca_file
@@ -55,6 +55,8 @@ Disables hostname verification.
 Disables certificate chain verification.
 .It Fl T
 Disables time verification.
+.It Fl V
+Disables certificate verification in general.
 .El
 .Sh ENVIRONMENT
 .Bl -tag -width Ds

@@ -67,6 +67,7 @@ main(int argc, char *argv[], char *envp[])
 	struct tls_config *tls_config;
 
 	if (getenv("TLSC_NO_VERIFICATION") != NULL) {
+fprintf(stderr, "turn of cert verification\n");
 		no_name_verification = true;
 		no_cert_verification = true;
 		no_time_verification = true;
@@ -84,7 +85,24 @@ main(int argc, char *argv[], char *envp[])
 	if ((tls_config = tls_config_new()) == NULL)
 		err(EXIT_FAILURE, "tls_config_new");
 
-	while ((ch = getopt(argc, argv, "c:k:f:p:n:HCTh")) != -1) {
+	char *str = NULL;
+	if ((str = getenv("TLSC_CERT_FILE")) != NULL)
+		if (tls_config_set_cert_file(tls_config, str) == -1)
+			err(EXIT_FAILURE, "tls_config_set_cert_file");
+
+	if ((str = getenv("TLSC_KEY_FILE")) != NULL)
+		if (tls_config_set_key_file(tls_config, str) == -1)
+			err(EXIT_FAILURE, "tls_config_set_key_file");
+
+	if ((str = getenv("TLSC_CA_FILE")) != NULL)
+		if (tls_config_set_ca_file(tls_config, str) == -1)
+			err(EXIT_FAILURE, "tls_config_set_ca_file");
+
+	if ((str = getenv("TLSC_CA_PATH")) != NULL)
+		if (tls_config_set_ca_path(tls_config, str) == -1)
+			err(EXIT_FAILURE, "tls_config_set_ca_path");
+
+	while ((ch = getopt(argc, argv, "c:k:f:p:n:HCTVh")) != -1) {
 		switch (ch) {
 		case 'c':
 			if (tls_config_set_cert_file(tls_config, optarg) == -1)
@@ -112,7 +130,12 @@ main(int argc, char *argv[], char *envp[])
 			no_cert_verification = true;
 			break;
 		case 'T':
-			no_time_verification  = true;
+			no_time_verification = true;
+			break;
+		case 'V':
+			no_name_verification = true;
+			no_cert_verification = true;
+			no_time_verification = true;
 			break;
 		case 'h':
 		default:
