@@ -63,7 +63,7 @@ tcpclient www.google.de 80
   * tlsc
     * Fingerprint accept
     * Revocation check
-    * OCSP
+    * [OCSP](https://en.wikipedia.org/wiki/Online_Certificate_Status_Protocol)
   * httpc
     * user authentication
     * support for different content encodings
