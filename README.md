@@ -1,6 +1,6 @@
 # ucspi-tools
 
-The ``UNIX Client/Server Program Interface Tool Suite`` is bunch of tools to
+The ***UNIX Client/Server Program Interface Tool Suite*** is bunch of tools to
 handle UCSPI connections.
 
 ## socks
@@ -9,21 +9,11 @@ handle UCSPI connections.
 and establishes further connection through the corresponding SOCKS server.
 *socks* supports SOCKS version 5.
 
-### TODO:
- * authentication
- * server side connections
-
 ## tlsc
 
 *tlsc* establishes an TLS connection and builds an crypto interface between the
 network side and program side of the exec-chain.  It depends on libtls from
 LibreSSL.
-
-### TODO:
- * Fingerprint accept
-   * list of fingerprints in dot files.
- * Revocation check
- * OCSP
 
 ## tlss
 
@@ -31,8 +21,12 @@ LibreSSL.
 
 ## sslc
 
-sslc is a legacy version of tlsc which just depends on plain old OpenSSL.  It
+*sslc* is a legacy version of tlsc which just depends on plain old OpenSSL.  It
 just contains rudiment certificate checks.
+
+## httpc
+
+The http client is just a stub for testing.  It needs to be rewritten.
 
 ## examples
 
@@ -56,9 +50,23 @@ alias tcpclient="tcpclient 127.0.0.1 8080 socks"
 tcpclient www.google.de 80
 ```
 
-## TODOS
- * http-proxy tool
- * smtp-client
+## TODO:
+  * missing, but usefull tools
+    * http proxy client
+    * smtp client
+    * socks (socks server)
+  * sockc
+    * user authentication
+    * server mode
+    * udp
+  * tlsc
+    * Fingerprint accept
+    * Revocation check
+    * OCSP
+  * httpc
+    * user authentication
+    * support for different content encodings
+    * keep-alive with queue of paths to download
 
 ## references
  * [SOCKS Protocol Version 5](http://tools.ietf.org/html/rfc1928)
