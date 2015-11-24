@@ -1,13 +1,13 @@
 # ucspi-tools
 
-The ***UNIX Client/Server Program Interface Tool Suite*** is bunch of tools to
+The **UNIX Client/Server Program Interface Tool Suite** is bunch of tools to
 handle UCSPI connections.
 
-## socks
+## sockc
 
-*socks* is an ucpi SOCKS client.  It handles the socks protocol transparently
+*sockc* is an ucpi SOCKS client.  It handles the socks protocol transparently
 and establishes further connection through the corresponding SOCKS server.
-*socks* supports SOCKS version 5.
+*sockc* supports SOCKS version 5.
 
 ## tlsc
 
@@ -26,7 +26,8 @@ just contains rudiment certificate checks.
 
 ## httpc
 
-The http client is just a stub for testing.  It needs to be rewritten.
+The http client is just a stub for testing.  It needs to be rewritten for
+productive use.
 
 ## examples
 
@@ -54,7 +55,7 @@ tcpclient www.google.de 80
   * missing, but usefull tools
     * http proxy client
     * smtp client
-    * socks (socks server)
+    * socks server
   * sockc
     * user authentication
     * server mode
@@ -69,6 +70,10 @@ tcpclient www.google.de 80
     * keep-alive with queue of paths to download
 
 ## references
- * [SOCKS Protocol Version 5](http://tools.ietf.org/html/rfc1928)
- * [RFC: Username/Password Authentication for SOCKS V5](https://tools.ietf.org/html/rfc1929)
- * [LibreSSL](http://www.libressl.org/)
+  * [ucspi](http://cr.yp.to/proto/ucspi.txt)
+  * [ucspi-unix](http://untroubled.org/ucspi-unix/)
+  * [ucspi-tcp](http://cr.yp.to/ucspi-tcp.html)
+  * http server [fnord](http://www.fefe.de/fnord/)
+  * [SOCKS Protocol Version 5](http://tools.ietf.org/html/rfc1928)
+  * [RFC: Username/Password Authentication for SOCKS V5](https://tools.ietf.org/html/rfc1929)
+  * [LibreSSL](http://www.libressl.org/)
