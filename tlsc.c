@@ -67,7 +67,6 @@ main(int argc, char *argv[], char *envp[])
 	struct tls_config *tls_config;
 
 	if (getenv("TLSC_NO_VERIFICATION") != NULL) {
-fprintf(stderr, "turn of cert verification\n");
 		no_name_verification = true;
 		no_cert_verification = true;
 		no_time_verification = true;
@@ -268,9 +267,5 @@ fprintf(stderr, "turn of cert verification\n");
 	tls_close(tls);
 	return EXIT_SUCCESS;
  err:
-	while ((e = ERR_get_error())) {
-		ERR_error_string(e, buf);
-		fprintf(stderr, " %s\n", buf);
-	}
 	errx(EXIT_FAILURE, "tls_error: %s", tls_error(tls));
 }
