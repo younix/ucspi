@@ -212,8 +212,8 @@ main(int argc, char *argv[], char *envp[])
 
 		if (close(pi[PIPE_WRITE]) < 0) err(EXIT_FAILURE, "close");
 		if (close(po_read) < 0) err(EXIT_FAILURE, "close");
-		execve(prog, argv, environ);
-		err(EXIT_FAILURE, "execve");
+		execvpe(prog, argv, environ);
+		err(EXIT_FAILURE, "execvpe");
 	default: break;	/* parent */
 	}
 
