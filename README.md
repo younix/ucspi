@@ -31,7 +31,7 @@ productive use.
 
 ## examples
 
-Just open a tcp conntection to google.de and make a fetch of the start page.
+Just open a tcp connection to google.de and make a fetch of the start page.
 
 ```shell
 tcpclient www.google.de 80 http www.google.de
@@ -52,7 +52,7 @@ tcpclient www.google.de 80
 ```
 
 ## TODO:
-  * missing, but usefull tools
+  * missing, but useful tools
     * http proxy client
     * smtp client
     * socks server
