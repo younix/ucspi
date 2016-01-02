@@ -50,8 +50,6 @@ usage(void)
 int
 main(int argc, char *argv[], char *envp[])
 {
-	int e;
-	char buf[BUFSIZ];
 	struct tls *tls = NULL;
 	int ch;
 	environ = envp;
