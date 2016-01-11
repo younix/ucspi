@@ -2,4 +2,4 @@
 
 set -eu
 
-/usr/bin/env >&7
+cat <&6 >"$1"
