@@ -1,0 +1,9 @@
+language: c
+script:
+  - make
+  - make test POSIXLY_CORRECT=true
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -q libbsd-dev
+  - git clone https://github.com/libressl-portable/portable.git libressl
+  - (cd libressl;./autogen.sh && ./configure && make check && sudo make install && sudo ldconfig)
