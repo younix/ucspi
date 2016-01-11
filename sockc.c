@@ -112,7 +112,7 @@ void
 usage(void)
 {
 	fprintf(stderr, "tcpclient PROXY-HOST PROXY-PORT "
-			"socks HOST PORT PROGRAM [ARGS...]\n");
+			"sockc HOST PORT PROGRAM [ARGS...]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -143,7 +143,7 @@ main(int argc, char *argv[], char *envp[])
 	char *prog = *argv; /* argv[0] == program name */
 
 	if (strlen(host) > 255)
-		perror("socks: hostname is too long");
+		perror("sockc: hostname is too long");
 
 	/* parsing address argument */
 	if (inet_pton(AF_INET6, host, &request.addr.ip6) == 1) {
@@ -162,14 +162,14 @@ main(int argc, char *argv[], char *envp[])
 	/* parsing port number */
 	if ((request.port = htons((uint16_t)strtol(port, NULL, 0))) == 0) goto err;
 
-	/* socks: start negotiation */
+	/* sockc: start negotiation */
 	if (write(WRITE_FD, &nego, sizeof nego) < 0) goto err;
 	if (read(READ_FD, &nego_ans, sizeof nego_ans) < 0) goto err;
 
 	if (nego_ans.method == NOT_ACC)
 		perror("No acceptable authentication methods");
 
-	/* socks: request for connection */
+	/* sockc: request for connection */
 	if (write(WRITE_FD, &request, 4) < 0) goto err;
 
 	if (request.atyp == IPv6) {
@@ -185,10 +185,10 @@ main(int argc, char *argv[], char *envp[])
 		perror("this should not happen");
 	}
 
-	/* socks: send requested port */
+	/* sockc: send requested port */
 	if (write(WRITE_FD, &request.port, sizeof request.port) < 0) goto err;
 
-	/* socks: start analysing reply */
+	/* sockc: start analysing reply */
 	if (read(READ_FD, &reply, 4) < 0) goto err;
 
 	if (reply.cmd != 0)
@@ -204,7 +204,7 @@ main(int argc, char *argv[], char *envp[])
 		read(READ_FD, &reply.addr.name.len, sizeof reply.addr.name.len);
 		read(READ_FD, &reply.addr.name.str, reply.addr.name.len);
 	} else {
-		perror("socks: unknown address type in reply");
+		perror("sockc: unknown address type in reply");
 	}
 
 	/* read the port of the replay */
@@ -252,6 +252,6 @@ main(int argc, char *argv[], char *envp[])
 	/* start client program */
 	execve(prog, argv, environ);
  err:
-	perror("socks");
+	perror("sockc");
 	return EXIT_FAILURE;
 }
