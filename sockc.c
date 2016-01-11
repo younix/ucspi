@@ -250,7 +250,7 @@ main(int argc, char *argv[], char *envp[])
 	setenv("TCPLOCALPORT", tmp, 1);
 
 	/* start client program */
-	execve(prog, argv, environ);
+	execvpe(prog, argv, environ);
  err:
 	perror("sockc");
 	return EXIT_FAILURE;
