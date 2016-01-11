@@ -234,7 +234,7 @@ main(int argc, char*argv[], char *envp[])
 	if (dup2(s, 7) == -1) err(EXIT_FAILURE, "dup2");
 	if (close(s) == -1) err(EXIT_FAILURE, "close");
 
-	execve(prog, argv, environ);
+	execvpe(prog, argv, environ);
 	err(EXIT_FAILURE, "execve");
  err:
 	perror(argv0);
