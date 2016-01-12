@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/younix/ucspi.svg)](https://travis-ci.org/younix/ucspi)
+
 # ucspi-tools
 
 The **UNIX Client/Server Program Interface Tool Suite** is bunch of tools to
