@@ -29,9 +29,6 @@
 #include <string.h>
 #include <unistd.h>
 
-/* enviroment */
-char **environ;
-
 int
 set_local_addr(int s, int family, char *local_addr_str, char *local_port_str)
 {
@@ -86,7 +83,7 @@ usage(void)
 }
 
 int
-main(int argc, char*argv[], char *envp[])
+main(int argc, char*argv[])
 {
 	struct addrinfo hints, *res, *res0;
 	int error = 0;
@@ -95,7 +92,6 @@ main(int argc, char*argv[], char *envp[])
 	int ch;
 	char *argv0 = argv[0];
 	const char *cause = NULL;
-	environ = envp;
 	bool h_flag = true;
 
 	/* set some default values */
@@ -234,7 +230,7 @@ main(int argc, char*argv[], char *envp[])
 	if (dup2(s, 7) == -1) err(EXIT_FAILURE, "dup2");
 	if (close(s) == -1) err(EXIT_FAILURE, "close");
 
-	execvpe(prog, argv, environ);
+	execvp(prog, argv);
 	err(EXIT_FAILURE, "execve");
  err:
 	perror(argv0);

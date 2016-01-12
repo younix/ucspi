@@ -1,4 +1,4 @@
-#!/usr/bin/env ksh
+#!/usr/bin/env bash
 
 . ./tap-functions -u
 
@@ -22,8 +22,7 @@ tmpdir=$(mktemp -d tests_XXXXXX)
 CLIENT_PORT=$(($RANDOM % 65536 + 1024))
 SERVER_PORT=$(($RANDOM % 65536 + 1024))
 ./tcps 127.0.0.1 $SERVER_PORT /usr/bin/env &
-./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT ./read.sh	\
-	1> $tmpdir/env.txt 				\
+./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT ./read6.sh $tmpdir/env.txt 				\
 
 ok $? "plain connection server -> client"
 
@@ -44,7 +43,7 @@ file_grep $tmpdir/env.txt "^PROTO=TCP\$"
 CLIENT_PORT=$(($RANDOM % 65536 + 1024))
 SERVER_PORT=$(($RANDOM % 65536 + 1024))
 ./tcps 127.0.0.1 $SERVER_PORT				\
-	./read.sh "0" "$tmpdir/env.txt" &
+	./read0.sh "$tmpdir/env.txt" &
 ./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT		\
 	./write.sh
 
@@ -68,7 +67,7 @@ CLIENT_PORT=$(($RANDOM % 65536 + 1024))
 SERVER_PORT=$(($RANDOM % 65536 + 1024))
 ./tcps 127.0.0.1 $SERVER_PORT				\
 	./tlss -f ca.crt -c server.crt -k server.key	\
-	./read.sh "0" "$tmpdir/env.txt" &
+	./read0.sh "$tmpdir/env.txt" &
 ./tcpc -p $CLIENT_PORT localhost $SERVER_PORT		\
 	./tlsc -f ca.crt -c client.crt -k client.key	\
 	./write.sh
@@ -96,7 +95,7 @@ SERVER_PORT=$(($RANDOM % 65536 + 1024))
 	/usr/bin/env &
 ./tcpc -p $CLIENT_PORT localhost $SERVER_PORT		\
 	./tlsc    -f ca.crt -c client.crt -k client.key	\
-	./read.sh "6" "$tmpdir/env.txt"
+	./read6.sh "$tmpdir/env.txt"
 
 ok $? "tls connection server -> client"
 
