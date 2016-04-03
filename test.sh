@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ksh
 
 . ./tap-functions -u
 
@@ -59,6 +59,14 @@ file_grep $tmpdir/env.txt "^TCPLOCALIP=127.0.0.1\$"
 file_grep $tmpdir/env.txt "^TCPLOCALHOST=localhost\$"
 file_grep $tmpdir/env.txt "^TCPLOCALPORT=$CLIENT_PORT\$"
 file_grep $tmpdir/env.txt "^PROTO=TCP\$"
+
+#########################################################################
+# cert checks								#
+#########################################################################
+
+# TODO: add a test here
+#h=$(openssl x509 -outform der -in server.crt | sha256)
+#printf "SHA256:${h}\n"
 
 #########################################################################
 # encrypted client to server communication				#

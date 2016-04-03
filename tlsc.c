@@ -42,8 +42,8 @@ static void
 usage(void)
 {
 	fprintf(stderr,
-	    "tlsc [-hCH] [-c cert_file] [-f ca_file] [-p ca_path] "
-	    "program [args...]\n");
+	    "tlsc [-hCHs] [-F fingerprint] [-c cert_file] [-f ca_file] "
+	    "[-p ca_path] program [args...]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -58,10 +58,12 @@ main(int argc, char *argv[], char *envp[])
 	int in = -1;
 	int out = -1;
 
+	bool show_cert_info = false;
 	bool no_name_verification = false;
 	bool no_cert_verification = false;
 	bool no_time_verification = false;
 	char *host = getenv("TCPREMOTEHOST");
+	char *fingerprint = getenv("TLSC_FINGERPRINT");
 	struct tls_config *tls_config;
 
 	if (getenv("TLSC_NO_VERIFICATION") != NULL) {
@@ -99,7 +101,7 @@ main(int argc, char *argv[], char *envp[])
 		if (tls_config_set_ca_path(tls_config, str) == -1)
 			err(EXIT_FAILURE, "tls_config_set_ca_path");
 
-	while ((ch = getopt(argc, argv, "c:k:f:p:n:HCTVh")) != -1) {
+	while ((ch = getopt(argc, argv, "c:k:f:p:n:sF:HCTVh")) != -1) {
 		switch (ch) {
 		case 'c':
 			if (tls_config_set_cert_file(tls_config, optarg) == -1)
@@ -119,6 +121,12 @@ main(int argc, char *argv[], char *envp[])
 			break;
 		case 'n':
 			if ((host = strdup(optarg)) == NULL) goto err;
+			break;
+		case 's':
+			show_cert_info = true;
+			break;
+		case 'F':
+			if ((fingerprint = strdup(optarg)) == NULL) goto err;
 			break;
 		case 'H':
 			no_name_verification = true;
@@ -143,7 +151,7 @@ main(int argc, char *argv[], char *envp[])
 	argc -= optind;
 	argv += optind;
 
-	if (argc < 1)
+	if (show_cert_info == false && argc < 1)
 		usage();
 
 	/* verification settings */
@@ -171,6 +179,30 @@ main(int argc, char *argv[], char *envp[])
 
 	if (tls_handshake(tls) == -1)
 		goto err;
+
+	if (show_cert_info) {
+		time_t notbefore = tls_peer_cert_notbefore(tls);
+		time_t notafter = tls_peer_cert_notafter(tls);
+		char notbefore_str[26];
+		char notafter_str[26];
+
+		printf("issuer: %s\n"
+		    "subject: %s\n"
+		    "start date: %s"
+		    "end date: %s"
+		    "fingerprint: %s\n",
+		    tls_peer_cert_issuer(tls),
+		    tls_peer_cert_subject(tls),
+		    ctime_r(&notbefore, notbefore_str),
+		    ctime_r(&notafter, notafter_str),
+		    tls_peer_cert_hash(tls));
+		return EXIT_SUCCESS;
+	}
+
+	if (fingerprint != NULL &&
+	    strcmp(tls_peer_cert_hash(tls), fingerprint) != 0)
+		err(EXIT_FAILURE, "certificate hash has changed from %s to %s",
+		    fingerprint, tls_peer_cert_hash(tls));
 
 	/* overide PROTO to signal the application layer that the communication
 	 * channel is save. */
