@@ -42,7 +42,7 @@ static void
 usage(void)
 {
 	fprintf(stderr,
-	    "tlsc [-hCHs] [-F fingerprint] [-c cert_file] [-f ca_file] "
+	    "tlsc [-hCHVs] [-F fingerprint] [-c cert_file] [-f ca_file] "
 	    "[-p ca_path] program [args...]\n");
 	exit(EXIT_FAILURE);
 }

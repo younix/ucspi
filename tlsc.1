@@ -1,4 +1,4 @@
-.Dd November 22, 2015
+.Dd April 3, 2016
 .Dt TLSC 1
 .Os
 .Sh NAME
@@ -6,7 +6,8 @@
 .Nd UCSPI TLS Client
 .Sh SYNOPSIS
 .Nm tcpclient Ar host Ar port Nm tlsc
-.Op Fl hCHTV
+.Op Fl hsCHTV
+.Op Fl F Ar fingerprint
 .Op Fl n Ar hostname
 .Op Fl c Ar cert_file
 .Op Fl f Ar ca_file
@@ -33,6 +34,8 @@ The options are as follows:
 .Bl -tag -width Ds
 .It Fl h
 Show usage text.
+.It Fl s
+Show the servers certificate information and exits.
 .It Fl c
 Uses first private key in
 .Ar cert_file
@@ -49,6 +52,9 @@ The files each contain one CA certificate.
 Uses
 .Ar hostname
 for hostname verification.
+.It Fl F Ar fingerprint
+sets the hash of the server certificate.
+If the hash does not match than the connection is about after handshake.
 .It Fl H
 Disables hostname verification.
 .It Fl C
@@ -60,6 +66,8 @@ Disables certificate verification in general.
 .El
 .Sh ENVIRONMENT
 .Bl -tag -width Ds
+.It TLSC_FINGERPRINT
+contains the server certificate's fingerprint.
 .It TLSC_NO_VERIFICATION
 turns of all kind of certificate verification.
 .It TLSC_NO_HOST_VERIFICATION
