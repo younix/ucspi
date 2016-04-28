@@ -67,7 +67,8 @@ main(int argc, char *argv[], char *envp[])
 	struct tls_config *tls_config;
 
 #ifdef __OpenBSD__
-	pledge("stdio rpath proc exec", NULL);
+	if (pledge("stdio rpath proc exec", NULL) == -1)
+		err(EXIT_FAILURE, "pledge");
 #endif
 
 	if (getenv("TLSC_NO_VERIFICATION") != NULL) {
@@ -255,7 +256,8 @@ main(int argc, char *argv[], char *envp[])
 	}
 
 #ifdef __OpenBSD__
-	pledge("stdio", NULL);
+	if (pledge("stdio", NULL) == -1)
+		err(EXIT_FAILURE, "pledge");
 #endif
 
 	/* close non-using ends of pipes */

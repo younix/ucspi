@@ -50,7 +50,8 @@ main(int argc, char *argv[])
 	int e;
 
 #ifdef __OpenBSD__
-	pledge("stdio rpath proc exec", NULL);
+	if (pledge("stdio rpath proc exec", NULL) == -1)
+		err(EXIT_FAILURE, "pledge");
 #endif
 
 	if ((tls_config = tls_config_new()) == NULL)
@@ -137,7 +138,8 @@ main(int argc, char *argv[])
 	}
 
 #ifdef __OpenBSD__
-	pledge("stdio", NULL);
+	if (pledge("stdio", NULL) == -1)
+		err(EXIT_FAILURE, "pledge");
 #endif
 
 	/* close non-using ends of pipes */
