@@ -90,8 +90,8 @@ start_prog(struct sock *sock, char *prog, char *argv[])
 	if (close(s) == -1) err(EXIT_FAILURE, "close");
 
 	/* execute program */
-	execv(prog, argv);
-	err(EXIT_FAILURE, "execv()");
+	execvp(prog, argv);
+	err(EXIT_FAILURE, "execvp()");
 }
 
 static void
