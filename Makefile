@@ -60,9 +60,11 @@ install: all
 	mkdir -p ${BINDIR}
 	mkdir -p ${MAN1DIR}
 	install -m 775 sockc ${BINDIR}
-	install -m 775 ${TLS} ${BINDIR}
+	install -m 775 tlsc ${BINDIR}
+	install -m 775 tlss ${BINDIR}
 	install -m 444 sockc.1 ${MAN1DIR}
 	install -m 444 tlsc.1 ${MAN1DIR}
+	install -m 444 tlss.1 ${MAN1DIR}
 
 $(TARBALL):
 	@mkdir -p $(DISTNAME)

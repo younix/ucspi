@@ -1,0 +1,76 @@
+.Dd April 28, 2016
+.Dt TLSS 1
+.Os
+.Sh NAME
+.Nm tlss
+.Nd UCSPI TLS Server
+.Sh SYNOPSIS
+.Nm tcpserver Ar host Ar port Nm tlsc
+.Op Fl C
+.Op Fl c Ar cert_file
+.Op Fl k Ar key_file
+.Op Fl p Ar ca_path
+.Op Fl f Ar ca_file
+.Ar program
+.Op args...
+.Sh DESCRIPTION
+The
+.Nm
+utility is a TLS server to be used in an UCSPI exec-chain.
+.Nm tcpserver
+spawns
+.Nm
+after a client connects.
+It initializes the server-side of a TLS tunnel and handles the TLS handshake.
+After the TLS connection is established
+.Nm
+spawns
+.Ar program .
+The spawned program is now able to handle its network communication in plain
+text.
+.Nm
+handle all the encryption and decryption of the communication.
+.Nm
+is also able to check a client side TLS certificate.
+The certificate verification can be controlled by to following options.
+The system CA certificates are used to verify the current connection
+certificate by default.
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl h
+Show usage text.
+.It Fl C
+this option activates the client-side certificate check.
+The connection is terminated if the client does not provide a valid certificate.
+The client certificate is verified against the given CA store.
+.It Fl c Ar cert_file
+sets the servers certificate that is used to verify the server to the client.
+.It Fl k Ar key_file
+sets the servers private key.
+.It Fl p Ar ca_path
+sets a directory path containing files with CA certificates which are used to
+verify the clients certificate.
+.It Fl f Ar ca_file
+sets a file with CA certificates which are used to verify the clients
+certificate.
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width Ds
+.It PROTO
+is set by
+.Nm
+to SSL to signal
+.Ar program
+that the connection is encrypted.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh SEE ALSO
+.Xr tlsc 1 ,
+.Xr tcpserver 1
+.Sh AUTHORS
+.An -nosplit
+The
+.Nm
+program was written by
+.An Jan Klemkow Aq Mt j.klemkow@wemelug.de .
