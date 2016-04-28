@@ -66,6 +66,10 @@ main(int argc, char *argv[], char *envp[])
 	char *fingerprint = getenv("TLSC_FINGERPRINT");
 	struct tls_config *tls_config;
 
+#ifdef __OpenBSD__
+	pledge("stdio rpath proc exec", NULL);
+#endif
+
 	if (getenv("TLSC_NO_VERIFICATION") != NULL) {
 		no_name_verification = true;
 		no_cert_verification = true;
@@ -249,6 +253,10 @@ main(int argc, char *argv[], char *envp[])
 		err(EXIT_FAILURE, "execvpe");
 	default: break;	/* parent */
 	}
+
+#ifdef __OpenBSD__
+	pledge("stdio", NULL);
+#endif
 
 	/* close non-using ends of pipes */
 	if (close(pi[PIPE_WRITE]) == -1) err(EXIT_FAILURE, "close");
