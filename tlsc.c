@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2014-2016 Jan Klemkow <j.klemkow@wemelug.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -124,6 +124,9 @@ main(int argc, char *argv[], char *envp[])
 			break;
 		case 's':
 			show_cert_info = true;
+			no_name_verification = true;
+			no_cert_verification = true;
+			no_time_verification = true;
 			break;
 		case 'F':
 			if ((fingerprint = strdup(optarg)) == NULL) goto err;

@@ -36,6 +36,7 @@ The options are as follows:
 Show usage text.
 .It Fl s
 Show the servers certificate information and exits.
+All certificate checks are deactivated in this case.
 .It Fl c
 Uses first private key in
 .Ar cert_file
@@ -55,6 +56,9 @@ for hostname verification.
 .It Fl F Ar fingerprint
 sets the hash of the server certificate.
 If the hash does not match than the connection is about after handshake.
+(look at option
+.Fl s
+to get the fingerprint)
 .It Fl H
 Disables hostname verification.
 .It Fl C
@@ -67,7 +71,12 @@ Disables certificate verification in general.
 .Sh ENVIRONMENT
 .Bl -tag -width Ds
 .It TLSC_FINGERPRINT
-contains the server certificate's fingerprint.
+sets fingerprint of the fingerprint.
+If the fingerprint does not match than the connection is about after the TLS
+handshake.
+(look at option
+.Fl s
+to get the fingerprint)
 .It TLSC_NO_VERIFICATION
 turns of all kind of certificate verification.
 .It TLSC_NO_HOST_VERIFICATION
