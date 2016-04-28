@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2015-2016 Jan Klemkow <j.klemkow@wemelug.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -48,6 +48,10 @@ main(int argc, char *argv[])
 	char buf[BUFSIZ];
 	int ch;
 	int e;
+
+#ifdef __OpenBSD__
+	pledge("stdio rpath proc exec", NULL);
+#endif
 
 	if ((tls_config = tls_config_new()) == NULL)
 		err(EXIT_FAILURE, "tls_config_new");
@@ -131,6 +135,10 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "execve");
 	default: break; /* parent */
 	}
+
+#ifdef __OpenBSD__
+	pledge("stdio", NULL);
+#endif
 
 	/* close non-using ends of pipes */
 	if (close(pi[PIPE_WRITE]) == -1) err(EXIT_FAILURE, "close");
