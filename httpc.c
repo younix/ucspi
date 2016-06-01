@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2014-2016 Jan Klemkow <j.klemkow@wemelug.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -23,73 +23,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#define PIPE_READ 6
-#define PIPE_WRITE 7
+#include "http_parser.h"
 
-enum method {GET, HEAD};
-enum encoding {CHUNKED, GZIP};
-
-struct header {
-	size_t content_length;
-};
-
-void
-parse_header_line(char *line, struct header *header)
-{
-	char *value = strchr(line, ':');
-	*value = '\0';
-	value++;
-
-	if (strcmp(line, "Content-Length") == 0) {
-		header->content_length = strtol(value, NULL, 0);
-	} else {
-		fprintf(stderr, "unknown: %s\n", line);
-	}
-}
-
-static char *
-read_response(struct header *header)
-{
-	char buf[BUFSIZ];
-	enum state {HEADER_STATE, BODY_STATE};
-	enum state state = HEADER_STATE;
-	size_t off = 0;
-	ssize_t size = 0;
-
-	while ((size = read(PIPE_READ, buf + off, sizeof(buf) - off)) > 0) {
-		fprintf(stderr, "head: %s", buf);
-		char *line, *next = buf;
-
-		switch (state) {
-		case HEADER_STATE:
-			line = strsep(&next, "\n");
-
-			if (next == NULL) { /* reached EOL */
-				strlcpy(buf, line, sizeof buf);
-				off = strlen(line);
-				continue;
-			}
-
-			parse_header_line(line, header);
-
-			if (strncmp(next, "\r\n", 2) == 0) {
-				state = BODY_STATE;
-				next+=2;
-			} else if(strncmp(next, "\n", 1) == 0) {
-				state = BODY_STATE;
-				next++;
-			} else {
-				break;
-			}
-		case BODY_STATE:
-			write(STDOUT_FILENO, buf, size);
-			break;
-		};
-
-	}
-
-	return false;
-}
+#define READ_FD 6
+#define WRITE_FD 7
 
 static void
 usage(void)
@@ -102,20 +39,27 @@ int
 main(int argc, char *argv[])
 {
 	int ch;
+	int verbosity = 0;
 	char *host = getenv("TCPREMOTEHOST");
 	char *file = NULL;
 	char *uri = "/";
+	char buf[BUFSIZ];
+	struct http_response head;
+	FILE *fh = NULL;
 
 	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
 		err(EXIT_FAILURE, "setvbuf");
 
-	while ((ch = getopt(argc, argv, "H:o:h")) != -1) {
+	while ((ch = getopt(argc, argv, "H:o:gvh")) != -1) {
 		switch (ch) {
 		case 'H':
 			if ((host = strdup(optarg)) == NULL) goto err;
 			break;
 		case 'o':
 			if ((file = strdup(optarg)) == NULL) goto err;
+			break;
+		case 'v':
+			verbosity++;
 			break;
 		case 'h':
 		default:
@@ -129,28 +73,53 @@ main(int argc, char *argv[])
 	if (argc > 0)
 		uri = argv[0];
 
-	char buf[BUFSIZ];
-	/* print request */
-	//fprintf(write_fh, "GET %s HTTP/1.1\r\n", uri);
-	snprintf(buf, sizeof buf, "GET %s HTTP/1.1\r\n", uri);
-	write(PIPE_WRITE, buf, strnlen(buf, sizeof buf));
+	/* write HTTP request header */
+	dprintf(WRITE_FD, "GET %s HTTP/1.1\r\n", uri);
+	if (host != NULL)
+		dprintf(WRITE_FD, "Host: %s\r\n", host);
+	dprintf(WRITE_FD, "Accept-Encoding: gzip\r\n", host);
+	dprintf(WRITE_FD, "\r\n");
 
-	if (host != NULL) {
-		//fprintf(write_fh, "Host: %s\r\n", host);
-		snprintf(buf, sizeof buf, "Host: %s\r\n", host);
-		write(PIPE_WRITE, buf, strnlen(buf, sizeof buf));
+	memset(&head, 0, sizeof head);
+
+	/* read response */
+	if ((fh = fdopen(READ_FD, "r")) == NULL)
+		err(EXIT_FAILURE, "fopen");
+
+	if (http_read_line_fh(fh , buf, sizeof buf) == -1)
+		errx(EXIT_FAILURE, "http_read_line failed");
+
+	int code = http_parse_code(buf, sizeof buf);
+	if (code != 200)
+		errx(EXIT_FAILURE, "%d %s\n", code, http_reason_phrase(code));
+
+	/* read response header */
+	do {
+		if (verbosity > 0)
+			fputs(buf, stderr);
+
+		if (http_read_line_fh(fh, buf, sizeof buf) == -1)
+			errx(EXIT_FAILURE, "http_read_line_fh failed");
+
+		if (http_parse_line(&head, buf, sizeof buf) == -1)
+			errx(EXIT_FAILURE, "http_parse_line failed");
+	} while (strcmp(buf, "\r\n") != 0);
+
+	/* handle content */
+	for (;head.content_lenght > 0;) {
+		size_t size = sizeof buf;
+
+		if (head.content_lenght < size)
+			size = head.content_lenght;
+
+		if (fread(buf, size , 1, fh) == 0)
+			err(EXIT_FAILURE, "fread");
+
+		if (fwrite(buf, size, 1, stdout) == 0)
+			err(EXIT_FAILURE, "fwrite");
+
+		head.content_lenght -= size;
 	}
-
-	//fprintf(write_fh, "\r\n");
-	write(PIPE_WRITE, "\r\n", 2);
-
-	/* get response */
-	struct header header;
-	read_response(&header);
-
-	if (file == NULL)
-		file = basename(uri);
-//	if (output(file, read_fh) == false) goto err;
 
 	return EXIT_SUCCESS;
  err:

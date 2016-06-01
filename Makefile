@@ -13,42 +13,52 @@ TLS ?= tlsc tlss
 .PHONY: all test clean install
 .SUFFIXES: .c .o
 
-all: sockc $(TLS) $(TARBALL)
+all: sockc $(TLS) $(TARBALL) httppc httpc
 
+# SOCKS 5
 sockc: sockc.o
 	$(CC) -o $@ sockc.o $(LIBS_BSD)
 
 socks: socks.o
 	$(CC) -o $@ socks.o $(LIBS_BSD)
 
-ucspi-tee: ucspi-tee.o
-	$(CC) -o $@ ucspi-tee.o
+# HTTP
+httpc.o: http_parser.h
+http_parser.o: http_parser.h
 
-# Just for some tests.  Don't use this.
-tcpc: tcpc.o
-	$(CC) -o $@ tcpc.o
+httpc: httpc.o http_parser.o
+	$(CC) -o $@ httpc.o http_parser.o
 
-tcps: tcps.o
-	$(CC) -o $@ tcps.o
+httppc: httppc.o http_parser.o
+	$(CC) -o $@ httppc.o http_parser.o
 
-httpc: httpc.o
-	$(CC) -o $@ httpc.o
-
-sslc: sslc.o
-	$(CC) -o sslc sslc.o $(LIBS_SSL) $(LIBS_BSD)
-
+# SSL/TLS
 tlsc: tlsc.o
 	$(CC) -o tlsc tlsc.o $(LIBS_TLS) $(LIBS_BSD)
 
 tlss: tlss.o
 	$(CC) -o tlss tlss.o $(LIBS_TLS) $(LIBS_BSD)
 
+sslc: sslc.o
+	$(CC) -o sslc sslc.o $(LIBS_SSL) $(LIBS_BSD)
+
 sslc.o: sslc.c
 	$(CC) $(CFLAGS) $(DEFINES) `pkg-config --cflags libssl` -o $@ -c sslc.c
+
+# Just for some tests.  Don't use this.
+ucspi-tee: ucspi-tee.o
+	$(CC) -o $@ ucspi-tee.o
+
+tcpc: tcpc.o
+	$(CC) -o $@ tcpc.o
+
+tcps: tcps.o
+	$(CC) -o $@ tcps.o
 
 splice: splice.o
 	$(CC) $(CFLAGS) -o $@ splice.o
 
+# general infrastructure
 .c.o:
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
