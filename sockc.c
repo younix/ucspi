@@ -29,9 +29,6 @@
 #	include <string.h>
 #endif
 
-/* enviroment */
-extern char **environ;
-
 /* uscpi */
 #define READ_FD 6
 #define WRITE_FD 7
@@ -117,7 +114,7 @@ usage(void)
 }
 
 int
-main(int argc, char *argv[], char *envp[])
+main(int argc, char *argv[])
 {
 	struct nego nego = {SOCKSv5, 1, NO_AUTH};
 	struct nego_ans nego_ans = {0, 0};
@@ -125,7 +122,6 @@ main(int argc, char *argv[], char *envp[])
 	struct request reply = {SOCKSv5, 0, RSV, 0, {{0}}, 0};
 	int ch, af = AF_INET6;
 
-	environ = envp;
 	while ((ch = getopt(argc, argv, "p:")) != -1) {
 		switch (ch) {
 		case 'h':
@@ -250,7 +246,7 @@ main(int argc, char *argv[], char *envp[])
 	setenv("TCPLOCALPORT", tmp, 1);
 
 	/* start client program */
-	execvpe(prog, argv, environ);
+	execvp(prog, argv);
  err:
 	perror("sockc");
 	return EXIT_FAILURE;
