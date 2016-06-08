@@ -165,7 +165,7 @@ main(int argc, char *argv[])
 	read_header(&head, fh);
 
 	if (head.content_encoding == HTTP_CONT_ENC_GZIP) {
-		if ((out = popen("gunzip", "w")) == NULL)
+		if ((out = popen("exec gunzip", "w")) == NULL)
 			err(EXIT_FAILURE, "popen");
 	}
 

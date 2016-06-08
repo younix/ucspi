@@ -101,6 +101,7 @@ main(int argc, char *argv[])
 
 	/* start client program */                                              
 	execvp(prog, argv);
+	err(EXIT_FAILURE, "execvp");
 
 	return EXIT_SUCCESS;
 }
