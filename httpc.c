@@ -38,55 +38,6 @@ usage(void)
 }
 
 void
-read_content(size_t content_length, FILE *in, FILE *out)
-{
-	char buf[BUFSIZ];
-
-	/* handle content */
-	for (;content_length > 0;) {
-		size_t size = sizeof buf;
-
-		if (content_length < size)
-			size = content_length;
-
-		if (fread(buf, size , 1, in) == 0)
-			err(EXIT_FAILURE, "fread");
-
-		if (fwrite(buf, size, 1, out) == 0)
-			err(EXIT_FAILURE, "fwrite");
-
-		content_length -= size;
-	}
-}
-
-void
-read_content_chunked(FILE *in, FILE *out)
-{
-	size_t content_length = 0;
-	char buf[BUFSIZ];
-
-	do {
-		/* read chunk-size [chunk-ext] CRLF */
-		if (http_read_line_fh(in, buf, sizeof buf) == -1)
-			errx(EXIT_FAILURE, "http_read_line failed");
-
-		int old_errno = errno;
-                errno = 0;
-		content_length = strtol(buf, NULL, 16);
-                if (errno != 0)
-                        errx(EXIT_FAILURE, "unreadable chunk size");
-                errno = old_errno;
-
-		/* read chunk-data */
-		read_content(content_length, in, out);
-
-		/* read CRLF */
-		if (http_read_line_fh(in , buf, sizeof buf) == -1)
-			errx(EXIT_FAILURE, "http_read_line failed");
-	} while (content_length > 0);
-}
-
-void
 read_header(struct http_response *head, FILE *fh)
 {
 	char buf[BUFSIZ];
@@ -109,6 +60,58 @@ read_header(struct http_response *head, FILE *fh)
 		if (http_parse_line(head, buf, sizeof buf) == -1)
 			errx(EXIT_FAILURE, "http_parse_line failed");
 	} while (strcmp(buf, "\r\n") != 0);
+}
+
+void
+read_content(size_t content_length, FILE *in, FILE *out)
+{
+	char buf[BUFSIZ];
+	size_t size = sizeof buf;
+
+	/* handle content */
+	for (;content_length > 0; content_length -= size) {
+		if (content_length < size)
+			size = content_length;
+
+		if (fread(buf, size , 1, in) == 0)
+			err(EXIT_FAILURE, "fread");
+
+		if (fwrite(buf, size, 1, out) == 0)
+			err(EXIT_FAILURE, "fwrite");
+	}
+}
+
+void
+read_content_chunked(struct http_response *head, FILE *in, FILE *out)
+{
+	size_t content_length = 0;
+	char buf[BUFSIZ];
+	int old_errno = 0;
+
+	do {
+		/* read: chunk-size [chunk-ext] CRLF */
+		if (http_read_line_fh(in, buf, sizeof buf) == -1)
+			errx(EXIT_FAILURE, "http_read_line failed");
+
+		/* parse: chunk-size */
+		old_errno = errno; errno = 0;
+		content_length = strtol(buf, NULL, 16);
+                if (errno != 0)
+                        errx(EXIT_FAILURE, "unreadable chunk size");
+                errno = old_errno;
+
+		if (content_length > 0) {
+			/* read: chunk-data */
+			read_content(content_length, in, out);
+
+			/* read: CRLF */
+			if (http_read_line_fh(in , buf, sizeof buf) == -1)
+				errx(EXIT_FAILURE, "http_read_line failed");
+		} else {
+			/* read: trailer-part */
+			read_header(head, in);
+		}
+	} while (content_length > 0);
 }
 
 int
@@ -169,8 +172,8 @@ main(int argc, char *argv[])
 			err(EXIT_FAILURE, "popen");
 	}
 
-	if (head.content_encoding == HTTP_CONT_ENC_GZIP)
-		read_content_chunked(fh, out);
+	if (head.transfer_encoding == HTTP_TRANS_ENC_CHUNKED)
+		read_content_chunked(&head, fh, out);
 	else
 		read_content(head.content_length, fh, out);
 
