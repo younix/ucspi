@@ -156,7 +156,8 @@ main(int argc, char *argv[])
 	}
 
 	/* parsing port number */
-	if ((request.port = htons((uint16_t)strtol(port, NULL, 0))) == 0) goto err;
+	if ((request.port = htons((uint16_t)strtol(port, NULL, 0))) == 0)
+		goto err;
 
 	/* sockc: start negotiation */
 	if (write(WRITE_FD, &nego, sizeof nego) < 0) goto err;
@@ -214,12 +215,18 @@ main(int argc, char *argv[])
 	char *tcp_local_port  = getenv("TCPLOCALPORT");
 	char *tcp_local_host  = getenv("TCPLOCALHOST");
 
-	if (tcp_remote_ip   != NULL)setenv("SOCKSREMOTEIP"  ,strdup(tcp_remote_ip)  ,1);
-	if (tcp_remote_port != NULL)setenv("SOCKSREMOTEPORT",strdup(tcp_remote_port),1);
-	if (tcp_remote_host != NULL)setenv("SOCKSREMOTEHOST",strdup(tcp_remote_host),1);
-	if (tcp_local_ip    != NULL)setenv("SOCKSLOCALIP"   ,strdup(tcp_local_ip)   ,1);
-	if (tcp_local_port  != NULL)setenv("SOCKSLOCALPORT" ,strdup(tcp_local_port) ,1);
-	if (tcp_local_host  != NULL)setenv("SOCKSLOCALHOST" ,strdup(tcp_local_host) ,1);
+#define SETENV(name, str) 						\
+	if ((str) != NULL && setenv((name), strdup(str), 1) == -1)	\
+			perror("setenv")
+
+	SETENV("SOCKSREMOTEIP"  ,tcp_remote_ip);
+	SETENV("SOCKSREMOTEPORT",tcp_remote_port);
+	SETENV("SOCKSREMOTEHOST",tcp_remote_host);
+	SETENV("SOCKSLOCALIP"   ,tcp_local_ip);
+	SETENV("SOCKSLOCALPORT" ,tcp_local_port);
+	SETENV("SOCKSLOCALHOST" ,tcp_local_host);
+
+#undef SETENV
 
 	char tmp[BUFSIZ];
 	if (request.atyp == IPv6 || request.atyp == IPv4) {
