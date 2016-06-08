@@ -15,7 +15,9 @@
  */
 
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <libgen.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -35,6 +37,80 @@ usage(void)
 	exit(EXIT_FAILURE);
 }
 
+void
+read_content(size_t content_length, FILE *in, FILE *out)
+{
+	char buf[BUFSIZ];
+
+	/* handle content */
+	for (;content_length > 0;) {
+		size_t size = sizeof buf;
+
+		if (content_length < size)
+			size = content_length;
+
+		if (fread(buf, size , 1, in) == 0)
+			err(EXIT_FAILURE, "fread");
+
+		if (fwrite(buf, size, 1, out) == 0)
+			err(EXIT_FAILURE, "fwrite");
+
+		content_length -= size;
+	}
+}
+
+void
+read_content_chunked(FILE *in, FILE *out)
+{
+	size_t content_length = 0;
+	char buf[BUFSIZ];
+
+	do {
+		/* read chunk-size [chunk-ext] CRLF */
+		if (http_read_line_fh(in, buf, sizeof buf) == -1)
+			errx(EXIT_FAILURE, "http_read_line failed");
+
+		int old_errno = errno;
+                errno = 0;
+		content_length = strtol(buf, NULL, 16);
+                if (errno != 0)
+                        errx(EXIT_FAILURE, "unreadable chunk size");
+                errno = old_errno;
+
+		/* read chunk-data */
+		read_content(content_length, in, out);
+
+		/* read CRLF */
+		if (http_read_line_fh(in , buf, sizeof buf) == -1)
+			errx(EXIT_FAILURE, "http_read_line failed");
+	} while (content_length > 0);
+}
+
+void
+read_header(struct http_response *head, FILE *fh)
+{
+	char buf[BUFSIZ];
+
+	memset(head, 0, sizeof *head);
+
+	if (http_read_line_fh(fh , buf, sizeof buf) == -1)
+		errx(EXIT_FAILURE, "http_read_line failed");
+
+	head->code = http_parse_code(buf, sizeof buf);
+	if (head->code != 200)
+		errx(EXIT_FAILURE, "%d %s\n", head->code,
+		    http_reason_phrase(head->code));
+
+	/* read response header */
+	do {
+		if (http_read_line_fh(fh, buf, sizeof buf) == -1)
+			errx(EXIT_FAILURE, "http_read_line_fh failed");
+
+		if (http_parse_line(head, buf, sizeof buf) == -1)
+			errx(EXIT_FAILURE, "http_parse_line failed");
+	} while (strcmp(buf, "\r\n") != 0);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -43,9 +119,9 @@ main(int argc, char *argv[])
 	char *host = getenv("TCPREMOTEHOST");
 	char *file = NULL;
 	char *uri = "/";
-	char buf[BUFSIZ];
 	struct http_response head;
 	FILE *fh = NULL;
+	FILE *out = stdout;
 
 	if (setvbuf(stdout, NULL, _IONBF, 0) != 0)
 		err(EXIT_FAILURE, "setvbuf");
@@ -80,46 +156,23 @@ main(int argc, char *argv[])
 	dprintf(WRITE_FD, "Accept-Encoding: gzip\r\n", host);
 	dprintf(WRITE_FD, "\r\n");
 
-	memset(&head, 0, sizeof head);
-
-	/* read response */
 	if ((fh = fdopen(READ_FD, "r")) == NULL)
-		err(EXIT_FAILURE, "fopen");
+		err(EXIT_FAILURE, "fdopen");
 
-	if (http_read_line_fh(fh , buf, sizeof buf) == -1)
-		errx(EXIT_FAILURE, "http_read_line failed");
+	if (file == NULL)
+		file = basename(uri);
 
-	int code = http_parse_code(buf, sizeof buf);
-	if (code != 200)
-		errx(EXIT_FAILURE, "%d %s\n", code, http_reason_phrase(code));
+	read_header(&head, fh);
 
-	/* read response header */
-	do {
-		if (verbosity > 0)
-			fputs(buf, stderr);
-
-		if (http_read_line_fh(fh, buf, sizeof buf) == -1)
-			errx(EXIT_FAILURE, "http_read_line_fh failed");
-
-		if (http_parse_line(&head, buf, sizeof buf) == -1)
-			errx(EXIT_FAILURE, "http_parse_line failed");
-	} while (strcmp(buf, "\r\n") != 0);
-
-	/* handle content */
-	for (;head.content_lenght > 0;) {
-		size_t size = sizeof buf;
-
-		if (head.content_lenght < size)
-			size = head.content_lenght;
-
-		if (fread(buf, size , 1, fh) == 0)
-			err(EXIT_FAILURE, "fread");
-
-		if (fwrite(buf, size, 1, stdout) == 0)
-			err(EXIT_FAILURE, "fwrite");
-
-		head.content_lenght -= size;
+	if (head.content_encoding == HTTP_CONT_ENC_GZIP) {
+		if ((out = popen("gunzip", "w")) == NULL)
+			err(EXIT_FAILURE, "popen");
 	}
+
+	if (head.content_encoding == HTTP_CONT_ENC_GZIP)
+		read_content_chunked(fh, out);
+	else
+		read_content(head.content_length, fh, out);
 
 	return EXIT_SUCCESS;
  err:

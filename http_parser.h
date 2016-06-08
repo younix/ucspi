@@ -3,13 +3,19 @@
 
 struct http_response {
 	int code;
-	size_t content_lenght;
-	int encoding;
-#	define HTTP_ENCODING_PLAIN    0x00
-#	define HTTP_ENCODING_COMPRESS 0x01
-#	define HTTP_ENCODING_DEFLATE  0x02
-#	define HTTP_ENCODING_GZIP     0x04
-#	define HTTP_ENCODING_CHUNKED  0x08
+	size_t content_length;
+
+	enum {
+		HTTP_CONT_ENC_PLAIN = 0,
+		HTTP_CONT_ENC_COMPRESS,
+		HTTP_CONT_ENC_DEFLATE,
+		HTTP_CONT_ENC_GZIP
+	} content_encoding;
+
+	enum {
+		HTTP_TRANS_ENC_NONE = 0,
+		HTTP_TRANS_ENC_CHUNKED
+	} transfer_encoding;
 };
 
 int http_read_line_fd(int fd, char *buf, size_t size);

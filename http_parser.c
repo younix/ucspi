@@ -78,27 +78,29 @@ http_parse_line(struct http_response *head, char *buf, size_t size)
 {
 	int old_errno = errno;
 
-	if (strncmp(buf, "Content-Length:", 15) == 0) {
+	if (strncmp(buf, "Content-Length:", 15) == 0)
+	{
 		errno = 0;
-		head->content_lenght = strtol(buf + 16, NULL, 10);
+		head->content_length = strtol(buf + 16, NULL, 10);
 		if (errno != 0)
 			return -1;
 		errno = old_errno;
 	}
-
-	/* Transfer-Encoding: gzip, chunked */
-	if (strncmp(buf, "Transfer-Encoding:", 18) == 0 ||
-	    strncmp(buf, "Content-Encoding:", 17) == 0) {
+	else if (strncmp(buf, "Content-Encoding:", 17) == 0)
+	{
 		if (strstr(buf, "compress") != NULL)
-			head->encoding |= HTTP_ENCODING_COMPRESS;
+			head->content_encoding = HTTP_CONT_ENC_COMPRESS;
 
 		if (strstr(buf, "deflate") != NULL)
-			head->encoding |= HTTP_ENCODING_DEFLATE;
+			head->content_encoding = HTTP_CONT_ENC_DEFLATE;
 
 		if (strstr(buf, "gzip") != NULL)
-			head->encoding |= HTTP_ENCODING_GZIP;
-
-		/* HTTP_ENCODING_CHUNKED */
+			head->content_encoding = HTTP_CONT_ENC_GZIP;
+	}
+	else if (strncmp(buf, "Transfer-Encoding:", 18) == 0)
+	{
+		if (strstr(buf, "chunked") != NULL)
+			head->transfer_encoding = HTTP_TRANS_ENC_CHUNKED;
 	}
 
 	return 0;
