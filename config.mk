@@ -4,7 +4,7 @@ BINDIR	= ${DESTDIR}${PREFIX}/bin/
 MANDIR	= ${DESTDIR}${PREFIX}/man/
 MAN1DIR	= ${MANDIR}/man1/
 
-VERSION = 1.1
+VERSION = 1.5
 
 # compiler
 CC	    = cc

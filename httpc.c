@@ -57,7 +57,7 @@ read_header(struct http_response *head, FILE *fh)
 		if (http_read_line_fh(fh, buf, sizeof buf) == -1)
 			errx(EXIT_FAILURE, "http_read_line_fh failed");
 
-		if (http_parse_line(head, buf, sizeof buf) == -1)
+		if (http_parse_line(head, buf) == -1)
 			errx(EXIT_FAILURE, "http_parse_line failed");
 	} while (strcmp(buf, "\r\n") != 0);
 }
@@ -157,6 +157,7 @@ main(int argc, char *argv[])
 	if (host != NULL)
 		dprintf(WRITE_FD, "Host: %s\r\n", host);
 	dprintf(WRITE_FD, "Accept-Encoding: gzip\r\n", host);
+	dprintf(WRITE_FD, "Connection: close\r\n");
 	dprintf(WRITE_FD, "\r\n");
 
 	if ((fh = fdopen(READ_FD, "r")) == NULL)

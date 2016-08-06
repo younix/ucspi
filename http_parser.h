@@ -21,7 +21,7 @@ struct http_response {
 int http_read_line_fd(int fd, char *buf, size_t size);
 int http_read_line_fh(FILE *fh, char *buf, size_t size);
 int http_parse_code(char *buf, size_t size);
-int http_parse_line(struct http_response *head, char *buf, size_t size);
+int http_parse_line(struct http_response *head, char *buf);
 char *http_reason_phrase(int code);
 
 #endif

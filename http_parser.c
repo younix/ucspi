@@ -74,7 +74,7 @@ http_parse_code(char *buf, size_t size)
 }
 
 int
-http_parse_line(struct http_response *head, char *buf, size_t size)
+http_parse_line(struct http_response *head, char *buf)
 {
 	int old_errno = errno;
 
