@@ -86,6 +86,9 @@ main(int argc, char *argv[], char *envp[])
 	if (getenv("TLSC_NO_TIME_VERIFICATION") != NULL)
 		no_time_verification = true;
 
+	if (tls_init() != 0)
+		err(EXIT_FAILURE, "tls_init");
+
 	if ((tls_config = tls_config_new()) == NULL)
 		err(EXIT_FAILURE, "tls_config_new");
 
@@ -173,9 +176,6 @@ main(int argc, char *argv[], char *envp[])
 		tls_config_insecure_noverifytime(tls_config);
 
 	/* libtls setup */
-	if (tls_init() != 0)
-		err(EXIT_FAILURE, "tls_init");
-
 	if ((tls = tls_client()) == NULL)
 		err(EXIT_FAILURE, "tls_client");
 

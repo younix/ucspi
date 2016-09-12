@@ -54,6 +54,9 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "pledge");
 #endif
 
+	if (tls_init() == -1)
+		err(EXIT_FAILURE, "tls_init");
+
 	if ((tls_config = tls_config_new()) == NULL)
 		err(EXIT_FAILURE, "tls_config_new");
 
@@ -87,9 +90,6 @@ main(int argc, char *argv[])
 	argv += optind;
 
 	/* prepare libtls */
-	if (tls_init() == -1)
-		err(EXIT_FAILURE, "tls_init");
-
 	if ((tls = tls_server()) == NULL)
 		err(EXIT_FAILURE, "tls_server");
 
