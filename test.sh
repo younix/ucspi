@@ -76,7 +76,7 @@ SERVER_PORT=$(($RANDOM % 65536 + 1024))
 ./tcps 127.0.0.1 $SERVER_PORT				\
 	./tlss -f ca.crt -c server.crt -k server.key	\
 	./read0.sh "$tmpdir/env.txt" &
-./tcpc -p $CLIENT_PORT localhost $SERVER_PORT		\
+./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT		\
 	./tlsc -f ca.crt -c client.crt -k client.key	\
 	./write.sh
 
@@ -101,7 +101,7 @@ SERVER_PORT=$(($RANDOM % 65536 + 1024))
 ./tcps 127.0.0.1 $SERVER_PORT				\
 	./tlss -C -f ca.crt -c server.crt -k server.key	\
 	/usr/bin/env &
-./tcpc -p $CLIENT_PORT localhost $SERVER_PORT		\
+./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT		\
 	./tlsc    -f ca.crt -c client.crt -k client.key	\
 	./read6.sh "$tmpdir/env.txt"
 
