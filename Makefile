@@ -8,12 +8,11 @@ DEFINES += -D_BSD_SOURCE
 CFLAGS_SSL=`pkg-config --cflags libssl`
 LIBS_TLS ?= -ltls `pkg-config --libs libssl`
 LIBS_SSL = `pkg-config --libs libssl openssl`
-TLS ?= tlsc tlss
 
 .PHONY: all test clean install
 .SUFFIXES: .c .o
 
-all: sockc $(TLS) $(TARBALL) httppc httpc
+all: sockc tlsc tlss httppc httpc
 
 # SOCKS 5
 sockc: sockc.o
@@ -58,13 +57,16 @@ tcps: tcps.o
 splice: splice.o
 	$(CC) $(CFLAGS) -o $@ splice.o
 
+findport: findport.o
+	$(CC) -o $@ findport.o
 # general infrastructure
 .c.o:
 	$(CC) $(CFLAGS) $(DEFINES) -c $<
 
 clean:
 	rm -rf *.core *.o obj/* socks sockc tcpc tcps tlsc tlss sslc httpc \
-	    httppc ucspi-tools-* ucspi-tee *.key *.csr *.crt *.trace *.out
+	    httppc findport ucspi-tools-* ucspi-tee *.key *.csr *.crt *.trace \
+	    *.out
 
 install: all
 	mkdir -p ${BINDIR}

@@ -2,7 +2,7 @@
 
 KEYLEN=4096
 
-test: tcps tcpc tlss tlsc server.crt client.crt ca.crt
+test: tcps tcpc tlss tlsc findport server.crt client.crt ca.crt
 	./test.sh
 
 # create server key ############################################################

@@ -19,8 +19,9 @@ tmpdir=$(mktemp -d tests_XXXXXX)
 #########################################################################
 # plain server to client communication					#
 #########################################################################
-CLIENT_PORT=$(($RANDOM % 65536 + 1024))
-SERVER_PORT=$(($RANDOM % 65536 + 1024))
+set `./findport 2`
+CLIENT_PORT=$1
+SERVER_PORT=$2
 ./tcps 127.0.0.1 $SERVER_PORT /usr/bin/env &
 ./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT ./read6.sh $tmpdir/env.txt 				\
 
@@ -40,8 +41,9 @@ file_grep $tmpdir/env.txt "^PROTO=TCP\$"
 #########################################################################
 # plain client to server communication					#
 #########################################################################
-CLIENT_PORT=$(($RANDOM % 65536 + 1024))
-SERVER_PORT=$(($RANDOM % 65536 + 1024))
+set `./findport 2`
+CLIENT_PORT=$1
+SERVER_PORT=$2
 ./tcps 127.0.0.1 $SERVER_PORT				\
 	./read0.sh "$tmpdir/env.txt" &
 ./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT		\
@@ -71,8 +73,9 @@ file_grep $tmpdir/env.txt "^PROTO=TCP\$"
 #########################################################################
 # encrypted client to server communication				#
 #########################################################################
-CLIENT_PORT=$(($RANDOM % 65536 + 1024))
-SERVER_PORT=$(($RANDOM % 65536 + 1024))
+set `./findport 2`
+CLIENT_PORT=$1
+SERVER_PORT=$2
 ./tcps 127.0.0.1 $SERVER_PORT				\
 	./tlss -f ca.crt -c server.crt -k server.key	\
 	./read0.sh "$tmpdir/env.txt" &
@@ -96,8 +99,9 @@ file_grep $tmpdir/env.txt "^PROTO=SSL\$"
 #########################################################################
 # encrypted server to client communication				#
 #########################################################################
-CLIENT_PORT=$(($RANDOM % 65536 + 1024))
-SERVER_PORT=$(($RANDOM % 65536 + 1024))
+set `./findport 2`
+CLIENT_PORT=$1
+SERVER_PORT=$2
 ./tcps 127.0.0.1 $SERVER_PORT				\
 	./tlss -C -f ca.crt -c server.crt -k server.key	\
 	/usr/bin/env &
