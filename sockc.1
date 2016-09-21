@@ -1,8 +1,9 @@
-.Dd $Mdocdate$
+.Dd September 21, 2016
 .Dt SOCKC 1
+.Os
 .Sh NAME
 .Nm sockc
-.Nd UCSPI sockc proxy client
+.Nd UCSPI SOCKS 5 proxy client
 .Sh SYNOPSIS
 .Nm tcpclient
 .Ar proxy-host
@@ -14,12 +15,12 @@
 .Sh DESCRIPTION
 The
 .Nm
-utility is a socks proxy handler for a UCSPI execchain.
+utility is a SOCKS 5 proxy handler for a UCSPI execchain.
 It communicates with tcpclient over pipes with filedescriptor 6 and 7.
-tcpclient connects to the socks proxy and delegates the further protocol
+tcpclient connects to the SOCKS proxy and delegates the further protocol
 handling to
-.Nm socks .
-sockc talks with the socks proxy and initiates a tcp connection to
+.Nm sockc .
+sockc talks with the SOCKS proxy and initiates a tcp connection to
 .Ar host
 with
 .Ar port .
@@ -36,7 +37,7 @@ By the usage of
 there are two TCP connections.
 One from the
 .Nm tcpclient
-to the socks proxy and an other from the socks proxy to the server.
+to the SOCKS proxy and an other from the SOCKS proxy to the server.
 The
 .Nm sockc
 programm tries to handel this in a transparant way for the program.
@@ -45,20 +46,19 @@ between program and proxy are overwritten with the description of the TCP
 connection between proxy and server.
 Additionally variables are set to describe the connection between program
 and proxy.
-
-
+.sp
    SOCKSLOCAL   TCPLOCAL
         |          |
  program <--> proxy <--> server
              |          |
         SOCKSREMOTE  TCPREMOTE
-
+.sp
 .Bl -tag -width Ds
 .It Ev PROTO
 Is set to TCP.
 .It Ev TCPLOCALHOST Ev TCPLOCALIP Ev TCPLOCALPORT
 These variables are set to the hostname, IP address and port number of the
-local socks proxy address.
+local SOCKS proxy address.
 .It Ev TCPREMOTEHOST Ev TCPREMOTEIP Ev TCPREMOTEPORT
 These variables are set to the hostname, IP address and port number of the
 server.
@@ -67,14 +67,15 @@ These variables are set to the hostname, IP address and port number of the
 tcpclient local side.
 .It Ev SOCKSREMOTEHOST Ev SOCKSREMOTEIP Ev SOCKSREMOTEPORT
 These variables are set to the hostname, IP address and port number of the
-socks proxy server side.
+SOCKS proxy server side.
 .El
 .\".Sh EXIT STATUS
 .\".Sh EXAMPLES
 .Sh SEE ALSO
-.Xr tcpclient 1 ,
-.Xr socks 1
+.Xr httppc 1 ,
+.Xr tcpclient 1
 .Sh STANDARDS
 RFC 1928, SOCKS version 5
 .Sh AUTHORS
-This program was written by Jan Klemkow.
+This program was written by
+.An Jan Klemkow Aq Mt j.klemkow@wemelug.de .
