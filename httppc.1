@@ -1,0 +1,49 @@
+.Dd September 21, 2016
+.Dt HTTPPC 1
+.Os
+.Sh NAME
+.Nm httppc
+.Nd HTTP proxy client
+.Sh SYNOPSIS
+.Nm tcpclient
+.Ar proxy-host
+.Ar proxy-port Nm httppc
+.Ar host
+.Ar port
+.Ar program
+.Op arguments
+.Sh DESCRIPTION
+The
+.Nm
+utility is an HTTP proxy handler for a UCSPI execchain.
+It communicates with tcpclient over pipes with filedescriptor 6 and 7.
+tcpclient connects to an HTTP proxy and delegates the further protocol
+handling to
+.Nm httppc .
+httppc talks with the HTTP proxy and initiates a TCP connection to
+.Ar host
+with
+.Ar port .
+After the connection initiation
+.Nm
+executes
+.Ar program
+with
+.Ar arguments .
+.Sh ENVIRONMENT
+.Bl -tag -width Ds
+.It Ev TCPLOCALHOST Ev TCPLOCALIP Ev TCPLOCALPORT
+These variables are delete.
+.It Ev TCPREMOTEHOST Ev TCPREMOTEPORT
+These variables are set to the hostname and port number of the server.
+.El
+.\".Sh EXIT STATUS
+.\".Sh EXAMPLES
+.Sh SEE ALSO
+.Xr sockc 1 ,
+.Xr tcpclient 1
+.Sh STANDARDS
+RFC 7231, section 4.3.6. CONNECT
+.Sh AUTHORS
+This program was written by
+.An Jan Klemkow Aq Mt j.klemkow@wemelug.de .
