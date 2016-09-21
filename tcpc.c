@@ -93,6 +93,7 @@ main(int argc, char*argv[])
 	char *argv0 = argv[0];
 	const char *cause = NULL;
 	bool h_flag = true;
+	bool debug = false;
 
 	/* set some default values */
 	memset(&hints, 0, sizeof(hints));
@@ -103,7 +104,7 @@ main(int argc, char*argv[])
 	char *local_port_str = NULL;
 
 	/* parsing command line arguments */
-	while ((ch = getopt(argc, argv, "46Hhi:p:")) != -1) {
+	while ((ch = getopt(argc, argv, "46dHhi:p:")) != -1) {
 		switch (ch) {
 		case '4':
 			if (hints.ai_family == AF_INET6)
@@ -114,6 +115,9 @@ main(int argc, char*argv[])
 			if (hints.ai_family == AF_INET)
 				usage();
 			hints.ai_family = AF_INET6;
+			break;
+		case 'd':
+			debug = true;
 			break;
 		case 'H':
 			h_flag = false;
@@ -216,6 +220,9 @@ main(int argc, char*argv[])
 	    sizeof local_ip, local_port, sizeof local_port,
 	    NI_NUMERICHOST | NI_NUMERICSERV)) != 0)
 		errx(EXIT_FAILURE, "%s", gai_strerror(error));
+
+	if (debug)
+		fprintf(stderr, "listen: %s:%s\n", local_ip, local_port);
 
 	if (strcmp(remote_ip  , "") != 0)setenv("TCPREMOTEIP"  , remote_ip  ,1);
 	if (strcmp(remote_port, "") != 0)setenv("TCPREMOTEPORT", remote_port,1);

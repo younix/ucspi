@@ -22,6 +22,7 @@
 
 #include <err.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -105,6 +106,7 @@ int
 main(int argc, char *argv[])
 {
 	int ch;
+	bool debug = false;
 
 	struct addrinfo hints, *res, *res0;
 	int error;
@@ -118,13 +120,16 @@ main(int argc, char *argv[])
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	while ((ch = getopt(argc, argv, "46h")) != -1) {
+	while ((ch = getopt(argc, argv, "46dh")) != -1) {
 		switch (ch) {
 		case '4':
 			hints.ai_family = PF_INET;
 			break;
 		case '6':
 			hints.ai_family = PF_INET6;
+			break;
+		case 'd':
+			debug = true;
 			break;
 		case 'h':
 		default:
@@ -165,6 +170,11 @@ main(int argc, char *argv[])
 		if (listen(sock[nsock].s, 5) == -1)
 			err(EXIT_FAILURE, "listen");
 
+		/* get really used address information */
+		if (getsockname(sock[nsock].s, res->ai_addr, &res->ai_addrlen)
+		    == -1)
+			err(EXIT_FAILURE, "getsockname");
+
 		/* resolve local address information */
 		if ((error = getnameinfo(res->ai_addr, res->ai_addrlen,
 		    sock[nsock].ip  , sizeof sock[nsock].ip,
@@ -177,6 +187,10 @@ main(int argc, char *argv[])
 		    sock[nsock].host, sizeof sock[nsock].host, NULL, 0, 0)) !=0)
 			errx(EXIT_FAILURE, "getnameinfo: %s",
 			    gai_strerror(error));
+
+		if (debug)
+			fprintf(stderr, "listen: %s:%s\n", sock[nsock].ip,
+			    sock[nsock].serv);
 
 		nsock++;
 	}

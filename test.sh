@@ -19,11 +19,15 @@ tmpdir=$(mktemp -d tests_XXXXXX)
 #########################################################################
 # plain server to client communication					#
 #########################################################################
-set `./findport 2`
-CLIENT_PORT=$1
-SERVER_PORT=$2
-./tcps 127.0.0.1 $SERVER_PORT /usr/bin/env &
-./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT ./read6.sh $tmpdir/env.txt 				\
+./tcps -d 127.0.0.1 0 /usr/bin/env 2>$tmpdir/tcps.log &
+
+# wait running server
+until grep -q '^listen: 127.0.0.1:' $tmpdir/tcps.log; do :; done
+SERVER_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcps.log | head -n 1)
+
+# start client
+./tcpc -d 127.0.0.1 $SERVER_PORT ./read6.sh $tmpdir/env.txt 2>$tmpdir/tcpc.log
+CLIENT_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcpc.log | head -n 1)
 
 ok $? "plain connection server -> client"
 
@@ -41,13 +45,14 @@ file_grep $tmpdir/env.txt "^PROTO=TCP\$"
 #########################################################################
 # plain client to server communication					#
 #########################################################################
-set `./findport 2`
-CLIENT_PORT=$1
-SERVER_PORT=$2
-./tcps 127.0.0.1 $SERVER_PORT				\
-	./read0.sh "$tmpdir/env.txt" &
-./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT		\
-	./write.sh
+./tcps -d 127.0.0.1 0 ./read0.sh "$tmpdir/env.txt" 2>$tmpdir/tcps.log &
+
+# wait running server
+until grep -q '^listen: 127.0.0.1:' $tmpdir/tcps.log; do :; done
+SERVER_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcps.log | head -n 1)
+
+./tcpc -d 127.0.0.1 $SERVER_PORT ./write.sh 2>$tmpdir/tcpc.log
+CLIENT_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcpc.log | head -n 1)
 
 ok $? "plain connection client -> server"
 
@@ -73,15 +78,19 @@ file_grep $tmpdir/env.txt "^PROTO=TCP\$"
 #########################################################################
 # encrypted client to server communication				#
 #########################################################################
-set `./findport 2`
-CLIENT_PORT=$1
-SERVER_PORT=$2
-./tcps 127.0.0.1 $SERVER_PORT				\
+./tcps -d 127.0.0.1 0					\
 	./tlss -f ca.crt -c server.crt -k server.key	\
-	./read0.sh "$tmpdir/env.txt" &
-./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT		\
+	./read0.sh "$tmpdir/env.txt" 2>$tmpdir/tcps.log &
+
+# wait running server
+until grep -q '^listen: 127.0.0.1:' $tmpdir/tcps.log; do :; done
+SERVER_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcps.log | head -n 1)
+
+./tcpc -d 127.0.0.1 $SERVER_PORT			\
 	./tlsc -f ca.crt -c client.crt -k client.key	\
-	./write.sh
+	./write.sh 2>$tmpdir/tcpc.log
+
+CLIENT_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcpc.log | head -n 1)
 
 ok $? "tls connection client -> server"
 
@@ -99,15 +108,19 @@ file_grep $tmpdir/env.txt "^PROTO=SSL\$"
 #########################################################################
 # encrypted server to client communication				#
 #########################################################################
-set `./findport 2`
-CLIENT_PORT=$1
-SERVER_PORT=$2
-./tcps 127.0.0.1 $SERVER_PORT				\
+./tcps -d 127.0.0.1 0					\
 	./tlss -C -f ca.crt -c server.crt -k server.key	\
-	/usr/bin/env &
-./tcpc -p $CLIENT_PORT 127.0.0.1 $SERVER_PORT		\
-	./tlsc    -f ca.crt -c client.crt -k client.key	\
-	./read6.sh "$tmpdir/env.txt"
+	/usr/bin/env 2>$tmpdir/tcps.log &
+
+# wait running server
+until grep -q '^listen: 127.0.0.1:' $tmpdir/tcps.log; do :; done
+SERVER_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcps.log | head -n 1)
+
+./tcpc -d 127.0.0.1 $SERVER_PORT			\
+	./tlsc -f ca.crt -c client.crt -k client.key	\
+	./read6.sh "$tmpdir/env.txt" 2>$tmpdir/tcpc.log
+
+CLIENT_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcpc.log | head -n 1)
 
 ok $? "tls connection server -> client"
 
