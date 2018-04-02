@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2013-2018 Jan Klemkow <j.klemkow@wemelug.de>
  * Copyright (c) 2015 Stefan Thiemann <stefanthiemann@icloud.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -29,7 +29,7 @@
 #	include <string.h>
 #endif
 
-/* uscpi */
+/* ucspi */
 #define READ_FD 6
 #define WRITE_FD 7
 
@@ -80,7 +80,7 @@ struct request {
 	uint16_t port;
 };
 
-char *
+static char *
 rep_mesg(uint8_t rep)
 {
 	switch (rep) {
@@ -100,11 +100,11 @@ rep_mesg(uint8_t rep)
 	return "unassigned";
 }
 
-void
+static void
 usage(void)
 {
-	fputs("tcpclient proxy-host proxy-port "
-	    " sockc host port program [args...]\n", stderr);
+	fputs("tcpclient proxyhost proxyport sockc host port prog [args...]\n",
+	    stderr);
 	exit(EXIT_FAILURE);
 }
 
