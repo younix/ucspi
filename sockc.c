@@ -53,11 +53,6 @@
 #define CMD_BIND    0x02 /* not supported */
 #define CMD_UDP_ASS 0x03 /* not supported */
 
-#define WRITE(fd, ptr, len) do {				\
-		if (write((fd), (ptr), (len)) < (len))		\
-			goto err;				\
-	} while(0);
-
 struct nego {
 	uint8_t ver;
 	uint8_t nmethods;
@@ -108,8 +103,8 @@ rep_mesg(uint8_t rep)
 void
 usage(void)
 {
-	fprintf(stderr, "tcpclient PROXY-HOST PROXY-PORT "
-			"sockc HOST PORT PROGRAM [ARGS...]\n");
+	fputs("tcpclient proxy-host proxy-port "
+	    " sockc host port program [args...]\n", stderr);
 	exit(EXIT_FAILURE);
 }
 
