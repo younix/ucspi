@@ -47,8 +47,11 @@ read_header(struct http_response *head, FILE *fh)
 		errx(EXIT_FAILURE, "http_read_line failed");
 
 	head->code = http_parse_code(buf, sizeof buf);
+	if (head->code == -1)
+		errx(EXIT_FAILURE, "unable to parse HTTP RETURN CODE");
+
 	if (head->code != 200)
-		errx(EXIT_FAILURE, "%d %s\n", head->code,
+		errx(EXIT_FAILURE, "http_parse_code...%d %s\n", head->code,
 		    http_reason_phrase(head->code));
 
 	/* read response header */
@@ -179,6 +182,6 @@ main(int argc, char *argv[])
 
 	return EXIT_SUCCESS;
  err:
-	perror("httpc:");
+	perror("err: httpc:");
 	return EXIT_FAILURE;
 }
