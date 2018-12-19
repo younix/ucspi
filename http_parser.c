@@ -6,6 +6,9 @@
 
 #include "http_parser.h"
 
+#define strmcmp(a, b)   \
+	strncmp((a), (b), strlen(b))
+
 int
 http_read_line_fd(int fd, char *buf, size_t size)
 {
@@ -78,7 +81,7 @@ http_parse_line(struct http_response *head, char *buf)
 {
 	int old_errno = errno;
 
-	if (strncmp(buf, "Content-Length:", 15) == 0)
+	if (strmcmp(buf, "Content-Length:") == 0)
 	{
 		errno = 0;
 		head->content_length = strtol(buf + 16, NULL, 10);
@@ -86,7 +89,7 @@ http_parse_line(struct http_response *head, char *buf)
 			return -1;
 		errno = old_errno;
 	}
-	else if (strncmp(buf, "Content-Encoding:", 17) == 0)
+	else if (strmcmp(buf, "Content-Encoding:") == 0)
 	{
 		if (strstr(buf, "compress") != NULL)
 			head->content_encoding = HTTP_CONT_ENC_COMPRESS;
@@ -97,7 +100,7 @@ http_parse_line(struct http_response *head, char *buf)
 		if (strstr(buf, "gzip") != NULL)
 			head->content_encoding = HTTP_CONT_ENC_GZIP;
 	}
-	else if (strncmp(buf, "Transfer-Encoding:", 18) == 0)
+	else if (strmcmp(buf, "Transfer-Encoding:") == 0)
 	{
 		if (strstr(buf, "chunked") != NULL)
 			head->transfer_encoding = HTTP_TRANS_ENC_CHUNKED;
