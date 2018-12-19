@@ -1,8 +1,8 @@
-[ req ]
+[req]
 prompt			= no
 distinguished_name	= req_distinguished_name
 
-[ req_distinguished_name ]
+[req_distinguished_name]
 C		= DE
 ST		= Test State or Province
 L		= Test Locality
@@ -10,3 +10,13 @@ O		= Organization Name
 OU		= Organizational Unit Name
 CN		= root
 emailAddress	= admin@localhost
+
+[root]
+private_key	= ca.key
+certificate	= ca.crt
+database	= ca.txt
+default_md	= sha1
+default_crl_hours = 1
+
+[ca]
+default_ca	= root
