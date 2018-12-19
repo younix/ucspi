@@ -23,7 +23,6 @@
 #include <unistd.h>
 
 #include <tls.h>
-#include <openssl/err.h>
 
 #ifndef MAX
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
@@ -47,9 +46,7 @@ main(int argc, char *argv[])
 	struct tls *tls = NULL;
 	struct tls *cctx = NULL;
 	struct tls_config *tls_config = NULL;
-	char buf[BUFSIZ];
 	int ch;
-	int e;
 
 #ifdef __OpenBSD__
 	if (pledge("stdio rpath proc exec", NULL) == -1)
@@ -100,13 +97,13 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "tls_server");
 
 	if (tls_configure(tls, tls_config) == -1)
-		goto err;
+		errx(EXIT_FAILURE, "tls_configure: %s", tls_error(tls));
 
 	if (tls_accept_fds(tls, &cctx, STDIN_FILENO, STDOUT_FILENO) == -1)
-		goto err;
+		errx(EXIT_FAILURE, "tls_accept_fds: %s", tls_error(tls));
 
 	if (tls_handshake(cctx) == -1)
-		goto err;
+		errx(EXIT_FAILURE, "tls_handshake: %s", tls_error(cctx));
 
 	if (setenv("PROTO", "SSL", 1) == -1)
 		err(EXIT_FAILURE, "setenv");
@@ -178,31 +175,26 @@ main(int argc, char *argv[])
 				    sn == TLS_WANT_POLLOUT)
 					goto again;
 				if (sn == -1)
-					goto err;
+					errx(EXIT_FAILURE, "tls_read: %s",
+					    tls_error(cctx));
 				if (sn == 0)
 					return EXIT_SUCCESS;
 				if (write(out, buf, sn) == -1)
-					err(EXIT_FAILURE, "write()");
+					err(EXIT_FAILURE, "write");
 			} while (sn == sizeof buf);
 		} else if (FD_ISSET(in, &readfds)) {
 			if ((sn = read(in, buf, sizeof buf)) == -1)
-				err(EXIT_FAILURE, "read()");
+				err(EXIT_FAILURE, "read");
 			if (sn == 0) /* EOF from inside */
 				goto out;
 			/* XXX: unable to detect disconnect here */
 			if (tls_write(cctx, buf, sn) == -1)
-				goto err;
+				errx(EXIT_FAILURE, "tls_write: %s",
+				    tls_error(cctx));
 		}
 	}
 
  out:
 	tls_close(cctx);
 	return EXIT_SUCCESS;
- err:
-	while ((e = ERR_get_error())) {
-		ERR_error_string(e, buf);
-		fprintf(stderr, " %s\n", buf);
-	}
-	errx(EXIT_FAILURE, "tls_error: %s", tls_error(cctx));
-	errx(EXIT_FAILURE, "tls_error: %s", tls_error(tls));
 }
