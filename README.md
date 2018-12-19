@@ -11,6 +11,11 @@ handle UCSPI connections.
 and establishes further connection through the corresponding SOCKS server.
 *sockc* supports SOCKS version 5.
 
+## httppc
+
+*httppc* is an HTTP proxy client. It handles the HTTP protocol transparently
+and establishes a tunnel via the HTTP CONNECT method.
+
 ## tlsc
 
 *tlsc* establishes an TLS connection and builds an crypto interface between the
@@ -28,7 +33,7 @@ just contains rudiment certificate checks.
 
 ## httpc
 
-The http client is just a stub for testing.  It needs to be rewritten for
+The HTTP client is just a stub for testing.  It needs to be rewritten for
 productive use.
 
 ## examples
@@ -55,7 +60,6 @@ tcpclient www.google.de 80
 
 ## TODO:
   * missing, but useful tools
-    * http proxy client
     * smtp client
     * socks server
   * sockc
