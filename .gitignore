@@ -9,4 +9,7 @@ tlsc
 tlss
 sslc
 tcpc
-ucspi-tools-1.1.tar.gz
+httpc
+*.tar.gz
+*.p12
+tags
