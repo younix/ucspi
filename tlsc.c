@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2016 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2014-2018 Jan Klemkow <j.klemkow@wemelug.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -27,7 +27,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <openssl/err.h>
 #include <tls.h>
 
 #ifndef MAX
@@ -130,7 +129,8 @@ main(int argc, char *argv[], char *envp[])
 				err(EXIT_FAILURE, "tls_config_set_ca_path");
 			break;
 		case 'n':
-			if ((host = strdup(optarg)) == NULL) goto err;
+			if ((host = strdup(optarg)) == NULL)
+				err(EXIT_FAILURE, "strdup");
 			break;
 		case 's':
 			show_cert_info = true;
@@ -139,7 +139,8 @@ main(int argc, char *argv[], char *envp[])
 			no_time_verification = true;
 			break;
 		case 'F':
-			if ((fingerprint = strdup(optarg)) == NULL) goto err;
+			if ((fingerprint = strdup(optarg)) == NULL)
+				err(EXIT_FAILURE, "strdup");
 			break;
 		case 'H':
 			no_name_verification = true;
@@ -182,13 +183,13 @@ main(int argc, char *argv[], char *envp[])
 		err(EXIT_FAILURE, "tls_client");
 
 	if (tls_configure(tls, tls_config) != 0)
-		err(EXIT_FAILURE, "tls_configure");
+		errx(EXIT_FAILURE, "tls_configure: %s", tls_error(tls));
 
 	if (tls_connect_fds(tls, READ_FD, WRITE_FD, host) == -1)
-		goto err;
+		errx(EXIT_FAILURE, "tls_connect_fds: %s", tls_error(tls));
 
 	if (tls_handshake(tls) == -1)
-		goto err;
+		errx(EXIT_FAILURE, "tls_handshake: %s", tls_error(tls));
 
 	if (show_cert_info) {
 		time_t notbefore = tls_peer_cert_notbefore(tls);
@@ -292,7 +293,8 @@ main(int argc, char *argv[], char *envp[])
 				    sn == TLS_WANT_POLLOUT)
 					goto again;
 				if (sn == -1)
-					goto err;
+					errx(EXIT_FAILURE, "tls_read: %s",
+					    tls_error(tls));
 				if (sn == 0)
 					return EXIT_SUCCESS;
 
@@ -311,6 +313,4 @@ main(int argc, char *argv[], char *envp[])
  out:
 	tls_close(tls);
 	return EXIT_SUCCESS;
- err:
-	errx(EXIT_FAILURE, "tls_error: %s", tls_error(tls));
 }
