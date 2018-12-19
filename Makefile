@@ -5,7 +5,6 @@ TARBALL := ${DISTNAME}.tar.gz
 
 DEFINES += -D_XOPEN_SOURCE=700
 DEFINES += -D_BSD_SOURCE
-CFLAGS_SSL=`pkg-config --cflags libssl`
 LIBS_TLS ?= -ltls `pkg-config --libs libssl`
 LIBS_SSL = `pkg-config --libs libssl openssl`
 
