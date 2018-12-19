@@ -62,7 +62,7 @@ main(int argc, char *argv[])
 	if ((tls_config = tls_config_new()) == NULL)
 		err(EXIT_FAILURE, "tls_config_new");
 
-	while ((ch = getopt(argc, argv, "Cc:k:p:f:")) != -1) {
+	while ((ch = getopt(argc, argv, "Cc:k:p:f:r:")) != -1) {
 		switch (ch) {
 		case 'C':
 			tls_config_verify_client(tls_config);
@@ -82,6 +82,10 @@ main(int argc, char *argv[])
 		case 'p':
 			if (tls_config_set_ca_path(tls_config, optarg) == -1)
 				err(EXIT_FAILURE, "tls_config_set_ca_path");
+			break;
+		case 'r':
+			if (tls_config_set_crl_file(tls_config, optarg) == -1)
+				err(EXIT_FAILURE, "tls_config_set_crl_file");
 			break;
 		default:
 			usage();
