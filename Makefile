@@ -3,8 +3,6 @@ include config.mk
 DISTNAME := ucspi-tools-${VERSION}
 TARBALL := ${DISTNAME}.tar.gz
 
-DEFINES += -D_XOPEN_SOURCE=700
-DEFINES += -D_BSD_SOURCE
 LIBS_TLS ?= -ltls `pkg-config --libs libssl`
 LIBS_SSL = `pkg-config --libs libssl openssl`
 
@@ -14,53 +12,57 @@ LIBS_SSL = `pkg-config --libs libssl openssl`
 all: sockc tlsc tlss httppc httpc
 
 # SOCKS 5
-sockc: sockc.o
-	$(CC) -o $@ sockc.o $(LIBS_BSD)
+#sockc: sockc.o
+#	$(CC) $(LDFLAGS) -o $@ sockc.o
 
-socks: socks.o
-	$(CC) -o $@ socks.o $(LIBS_BSD)
+#socks: socks.o
+#	$(CC) $(LDFLAGS) -o $@ socks.o
 
 # HTTP
 httpc.o: http_parser.h
 http_parser.o: http_parser.h
 
 httpc: httpc.o http_parser.o
-	$(CC) -o $@ httpc.o http_parser.o
+	$(CC) $(LDFLAGS) -o $@ httpc.o http_parser.o
 
 httppc: httppc.o http_parser.o
-	$(CC) -o $@ httppc.o http_parser.o
+	$(CC) $(LDFLAGS) -o $@ httppc.o http_parser.o
 
 # SSL/TLS
 tlsc: tlsc.o
-	$(CC) -o tlsc tlsc.o $(LIBS_TLS) $(LIBS_BSD)
+	$(CC) $(LDFLAGS) -o tlsc tlsc.o $(LIBS_TLS)
 
 tlss: tlss.o
-	$(CC) -o tlss tlss.o $(LIBS_TLS) $(LIBS_BSD)
+	$(CC) $(LDFLAGS) -o tlss tlss.o $(LIBS_TLS)
 
 sslc: sslc.o
-	$(CC) -o sslc sslc.o $(LIBS_SSL) $(LIBS_BSD)
+	$(CC) $(LDFLAGS) -o sslc sslc.o $(LIBS_SSL)
 
 sslc.o: sslc.c
-	$(CC) $(CFLAGS) $(DEFINES) `pkg-config --cflags libssl` -o $@ -c sslc.c
+	$(CC) $(CFLAGS) `pkg-config --cflags libssl` -o $@ -c sslc.c
 
 # Just for some tests.  Don't use this.
-ucspi-tee: ucspi-tee.o
-	$(CC) -o $@ ucspi-tee.o
+#ucspi-tee: ucspi-tee.o
+#	$(CC) $(LDFLAGS) -o $@ ucspi-tee.o
 
-tcpc: tcpc.o
-	$(CC) -o $@ tcpc.o
+#tcpc: tcpc.o
+#	$(CC) $(LDFLAGS) -o $@ tcpc.o
 
-tcps: tcps.o
-	$(CC) -o $@ tcps.o
+#tcps: tcps.o
+#	$(CC) $(LDFLAGS) -o $@ tcps.o
 
-splice: splice.o
-	$(CC) $(CFLAGS) -o $@ splice.o
+#splice: splice.o
+#	$(CC) $(LDFLAGS) -o $@ splice.o
 
-findport: findport.o
-	$(CC) -o $@ findport.o
+#findport: findport.o
+#	$(CC) $(LDFLAGS) -o $@ findport.o
+
 # general infrastructure
+.o:
+	$(CC) $(LDFLAGS) -o $@ $<
+
 .c.o:
-	$(CC) $(CFLAGS) $(DEFINES) -c $<
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
 	rm -rf *.core *.o obj/* socks sockc tcpc tcps tlsc tlss sslc httpc \

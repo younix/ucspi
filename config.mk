@@ -7,5 +7,8 @@ MAN1DIR	= ${MANDIR}/man1/
 VERSION = 1.5
 
 # compiler
-CC	    = cc
-CFLAGS	    = -std=c99 -pedantic -Wall -Wextra -g
+CC	= cc
+CFLAGS	= -std=c99 -pedantic -Wall -Wextra
+CFLAGS += -D_XOPEN_SOURCE=700
+CFLAGS += -D_BSD_SOURCE
+LDFLAGS =
