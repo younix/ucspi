@@ -6,7 +6,8 @@
 
 #include "http_parser.h"
 
-#define strmcmp(a, b)   \
+/* string max compare */
+#define strmcmp(a, b)	\
 	strncmp((a), (b), strlen(b))
 
 int
