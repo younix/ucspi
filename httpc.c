@@ -98,9 +98,9 @@ read_content_chunked(struct http_response *head, FILE *in, FILE *out)
 		/* parse: chunk-size */
 		old_errno = errno; errno = 0;
 		content_length = strtol(buf, NULL, 16);
-                if (errno != 0)
-                        errx(EXIT_FAILURE, "unreadable chunk size");
-                errno = old_errno;
+		if (errno != 0)
+			errx(EXIT_FAILURE, "unreadable chunk size");
+		errno = old_errno;
 
 		if (content_length > 0) {
 			/* read: chunk-data */
