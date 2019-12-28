@@ -10,6 +10,7 @@
 .Op Fl F Ar fingerprint
 .Op Fl n Ar hostname
 .Op Fl c Ar cert_file
+.Op Fl k Ar key_file
 .Op Fl f Ar ca_file
 .Op Fl p Ar ca_path
 .Ar program
@@ -38,8 +39,12 @@ Show usage text.
 Show the servers certificate information and exits.
 All certificate checks are deactivated in this case.
 .It Fl c Ar cert_file
-Uses first private key in
+Uses first certificate in
 .Ar cert_file
+for client site authentication.
+.It Fl k Ar key_file
+Uses first private key in
+.Ar key_file
 for client site authentication.
 .It Fl f Ar cafile
 .Ar cafile
