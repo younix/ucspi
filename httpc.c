@@ -158,7 +158,7 @@ main(int argc, char *argv[])
 	dprintf(WRITE_FD, "GET %s HTTP/1.1\r\n", uri);
 	if (host != NULL)
 		dprintf(WRITE_FD, "Host: %s\r\n", host);
-	dprintf(WRITE_FD, "Accept-Encoding: gzip\r\n", host);
+	dprintf(WRITE_FD, "Accept-Encoding: gzip\r\n");
 	dprintf(WRITE_FD, "Connection: close\r\n");
 	dprintf(WRITE_FD, "\r\n");
 
