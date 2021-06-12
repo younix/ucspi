@@ -4,12 +4,11 @@ DISTNAME := ucspi-tools-${VERSION}
 TARBALL := ${DISTNAME}.tar.gz
 
 LIBS_TLS ?= -ltls `pkg-config --libs libssl`
-LIBS_SSL = `pkg-config --libs libssl openssl`
 
 .PHONY: all test clean install
 .SUFFIXES: .c .o
 
-all: sockc tlsc tlss httppc httpc
+all: sockc tlsc tlss httppc httpc ftpc
 
 # SOCKS 5
 #sockc: sockc.o
@@ -28,6 +27,9 @@ httpc: httpc.o http_parser.o
 httppc: httppc.o http_parser.o
 	$(CC) $(LDFLAGS) -o $@ httppc.o http_parser.o
 
+ftpc: ftpc.o
+	$(CC) $(LDFLAGS) -o $@ ftpc.o
+
 # SSL/TLS
 tlsc: tlsc.o
 	$(CC) $(LDFLAGS) -o tlsc tlsc.o $(LIBS_TLS)
@@ -35,11 +37,13 @@ tlsc: tlsc.o
 tlss: tlss.o
 	$(CC) $(LDFLAGS) -o tlss tlss.o $(LIBS_TLS)
 
-sslc: sslc.o
-	$(CC) $(LDFLAGS) -o sslc sslc.o $(LIBS_SSL)
-
-sslc.o: sslc.c
-	$(CC) $(CFLAGS) `pkg-config --cflags libssl` -o $@ -c sslc.c
+# Just for lagacy systems.  Don't use this.
+#LIBS_SSL = `pkg-config --libs libssl openssl`
+#sslc: sslc.o
+#	$(CC) $(LDFLAGS) -o sslc sslc.o $(LIBS_SSL)
+#
+#sslc.o: sslc.c
+#	$(CC) $(CFLAGS) `pkg-config --cflags libssl` -o $@ -c sslc.c
 
 # Just for some tests.  Don't use this.
 #ucspi-tee: ucspi-tee.o
@@ -66,8 +70,8 @@ sslc.o: sslc.c
 
 clean:
 	rm -rf *.core *.o obj/* socks sockc tcpc tcps tlsc tlss sslc httpc \
-	    httppc findport ucspi-tools-* ucspi-tee *.key *.csr *.crt *.trace \
-	    *.out
+	    httppc ftpc findport ucspi-tools-* ucspi-tee *.key *.csr *.crt \
+	    *.trace *.out
 
 install: all
 	mkdir -p ${BINDIR}
