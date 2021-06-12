@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Jan Klemkow <j.klemkow@wemelug.de>
+ * Copyright (c) 2013-2021 Jan Klemkow <j.klemkow@wemelug.de>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -28,6 +28,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+/* Set enviroment variable if value is not empty. */
+#define set_env(name, value)			\
+	if (strcmp((value), "") != 0)		\
+		setenv((name), (value), 1)
 
 int
 set_local_addr(int s, int family, char *local_addr_str, char *local_port_str)
@@ -224,13 +229,14 @@ main(int argc, char*argv[])
 	if (debug)
 		fprintf(stderr, "listen: %s:%s\n", local_ip, local_port);
 
-	if (strcmp(remote_ip  , "") != 0)setenv("TCPREMOTEIP"  , remote_ip  ,1);
-	if (strcmp(remote_port, "") != 0)setenv("TCPREMOTEPORT", remote_port,1);
-	if (strcmp(remote_host, "") != 0)setenv("TCPREMOTEHOST", remote_host,1);
-	if (strcmp(local_ip   , "") != 0)setenv("TCPLOCALIP"   , local_ip   ,1);
-	if (strcmp(local_port , "") != 0)setenv("TCPLOCALPORT" , local_port ,1);
-	if (strcmp(local_host , "") != 0)setenv("TCPLOCALHOST" , local_host ,1);
-	setenv("PROTO", "TCP", 1);
+	/* prepare enviroment */
+	set_env("TCPREMOTEIP"  , remote_ip);
+	set_env("TCPREMOTEPORT", remote_port);
+	set_env("TCPREMOTEHOST", remote_host);
+	set_env("TCPLOCALIP"   , local_ip);
+	set_env("TCPLOCALPORT" , local_port);
+	set_env("TCPLOCALHOST" , local_host);
+	set_env("PROTO", "TCP");
 
 	/* prepare file descriptors */
 	if (dup2(s, 6) == -1) err(EXIT_FAILURE, "dup2");
