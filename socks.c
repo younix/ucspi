@@ -36,6 +36,11 @@ extern char **environ;
 #define READ_FD STDIN_FILENO
 #define WRITE_FD STDOUT_FILENO
 
+/* Set enviroment variable if value is not empty. */
+#define set_env(name, value)			\
+	if (strcmp((value), "") != 0)		\
+		setenv((name), (value), 1)
+
 /* negotiation fields */
 #define SOCKSv5 0x05
 #define RSV 0x00
@@ -246,12 +251,12 @@ main(int argc, char *argv[], char *envp[])
 	char *tcp_local_port  = getenv("TCPLOCALPORT");
 	char *tcp_local_host  = getenv("TCPLOCALHOST");
 
-	if (tcp_remote_ip   != NULL)setenv("SOCKSREMOTEIP"  ,strdup(tcp_remote_ip)  ,1);
-	if (tcp_remote_port != NULL)setenv("SOCKSREMOTEPORT",strdup(tcp_remote_port),1);
-	if (tcp_remote_host != NULL)setenv("SOCKSREMOTEHOST",strdup(tcp_remote_host),1);
-	if (tcp_local_ip    != NULL)setenv("SOCKSLOCALIP"   ,strdup(tcp_local_ip)   ,1);
-	if (tcp_local_port  != NULL)setenv("SOCKSLOCALPORT" ,strdup(tcp_local_port) ,1);
-	if (tcp_local_host  != NULL)setenv("SOCKSLOCALHOST" ,strdup(tcp_local_host) ,1);
+	set_env("SOCKSREMOTEIP",   strdup(tcp_remote_ip));
+	set_env("SOCKSREMOTEPORT", strdup(tcp_remote_port));
+	set_env("SOCKSREMOTEHOST", strdup(tcp_remote_host));
+	set_env("SOCKSLOCALIP",    strdup(tcp_local_ip));
+	set_env("SOCKSLOCALPORT",  strdup(tcp_local_port));
+	set_env("SOCKSLOCALHOST",  strdup(tcp_local_host));
 
 	char tmp[BUFSIZ];
 	if (request.atyp == IPv6 || request.atyp == IPv4) {
