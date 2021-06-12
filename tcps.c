@@ -16,7 +16,6 @@
 
 #include <sys/select.h>
 #include <sys/socket.h>
-#include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
 
