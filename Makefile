@@ -86,11 +86,7 @@ install: all
 	install -m 444 httppc.1 ${MAN1DIR}
 
 $(TARBALL):
-	@mkdir -p $(DISTNAME)
-	@cp sockc.c sockc.1 tlsc.c tlsc.1 httpc.c ucspi-tee.c README.md \
-	    config.mk Makefile $(DISTNAME)
-	tar czf $(TARBALL) $(DISTNAME)
-	@rm -rf $(DISTNAME)
+	git archive --format=tar.gz --prefix=$(DISTNAME)/ HEAD -o $@
 
 deb: $(TARBALL)
 	#dh_make -y -s -i -f $(TARBALL) -p ucspi_${VERSION}
