@@ -8,7 +8,7 @@ LIBS_TLS ?= -ltls `pkg-config --libs libssl`
 .PHONY: all test clean install
 .SUFFIXES: .c .o
 
-all: sockc tlsc tlss httppc httpc ftpc
+all: sockc tlsc tlss httppc httpc https ftpc
 
 # SOCKS 5
 #sockc: sockc.o
@@ -27,9 +27,6 @@ httpc: httpc.o http_parser.o
 httppc: httppc.o http_parser.o
 	$(CC) $(LDFLAGS) -o $@ httppc.o http_parser.o
 
-ftpc: ftpc.o
-	$(CC) $(LDFLAGS) -o $@ ftpc.o
-
 # SSL/TLS
 tlsc: tlsc.o
 	$(CC) $(LDFLAGS) -o tlsc tlsc.o $(LIBS_TLS)
@@ -44,29 +41,6 @@ tlss: tlss.o
 #
 #sslc.o: sslc.c
 #	$(CC) $(CFLAGS) `pkg-config --cflags libssl` -o $@ -c sslc.c
-
-# Just for some tests.  Don't use this.
-#ucspi-tee: ucspi-tee.o
-#	$(CC) $(LDFLAGS) -o $@ ucspi-tee.o
-
-#tcpc: tcpc.o
-#	$(CC) $(LDFLAGS) -o $@ tcpc.o
-
-#tcps: tcps.o
-#	$(CC) $(LDFLAGS) -o $@ tcps.o
-
-#splice: splice.o
-#	$(CC) $(LDFLAGS) -o $@ splice.o
-
-#findport: findport.o
-#	$(CC) $(LDFLAGS) -o $@ findport.o
-
-# general infrastructure
-.o:
-	$(CC) $(LDFLAGS) -o $@ $<
-
-.c.o:
-	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
 	rm -rf *.core *.o obj/* socks sockc tcpc tcps tlsc tlss sslc httpc \
