@@ -5,7 +5,7 @@ ifeq "$(OS)" "Linux"
 	CFLAGS += -DUSE_LIBBSD
 	CFLAGS += -D_GNU_SOURCE
 	CFLAGS += `pkg-config --cflags libbsd`
-	LDFLAGS += `pkg-config --libs libbsd`
+	LDLIBS += `pkg-config --libs libbsd`
 endif
 
 # MacOSX

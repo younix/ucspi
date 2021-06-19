@@ -44,7 +44,7 @@ tlss: tlss.o
 
 clean:
 	rm -rf *.core *.o obj/* socks sockc tcpc tcps tlsc tlss sslc httpc \
-	    httppc ftpc findport ucspi-tools-* ucspi-tee *.key *.csr *.crt \
+	    httppc https ftpc findport ucspi-tools-* ucspi-tee *.key *.csr *.crt \
 	    *.trace *.out
 
 install: all
