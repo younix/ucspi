@@ -61,7 +61,7 @@ main(void)
 	if (strcmp(path, "/") == 0)
 		strcpy(path, "index.html");
 
-	snprintf(file, sizeof file, "%s/blub/../%s", htdocs, path);
+	snprintf(file, sizeof file, "%s/%s", htdocs, path);
 	if (realpath(file, path) == NULL) {
 		if (errno == ENOENT)
 			goto not_found;
