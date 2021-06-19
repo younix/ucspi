@@ -4,12 +4,16 @@
 *.key
 *.csr
 *.crt
+*.out
 sockc
 tlsc
 tlss
 sslc
 tcpc
+httppc
 httpc
+https
+ftpc
 *.tar.gz
 *.p12
 tags
