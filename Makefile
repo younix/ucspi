@@ -10,13 +10,6 @@ LIBS_TLS ?= -ltls `pkg-config --libs libssl`
 
 all: sockc tlsc tlss httppc httpc https ftpc
 
-# SOCKS 5
-#sockc: sockc.o
-#	$(CC) $(LDFLAGS) -o $@ sockc.o
-
-#socks: socks.o
-#	$(CC) $(LDFLAGS) -o $@ socks.o
-
 # HTTP
 httpc.o: http_parser.h
 http_parser.o: http_parser.h
