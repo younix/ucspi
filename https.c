@@ -14,6 +14,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/stat.h>
+
+#include <err.h>
 #include <errno.h>
 #include <stdio.h>
 #include <limits.h>
@@ -33,6 +36,8 @@ main(void)
 	char file[PATH_MAX];
 	char htdocs[PATH_MAX] = "/var/www/htdocs";
 	char resolved[PATH_MAX];
+	enum connection { KEEP_ALIVE, CLOSE } connection;
+	struct stat sb;
 	unsigned int major;
 	unsigned int minor;
 	size_t n;
@@ -44,7 +49,8 @@ main(void)
 	if (pledge("stdio rpath", NULL) == -1)
 		goto err;
 #endif
-
+ next:
+	memset(&sb, 0, sizeof sb);
 	memset(path, 0, sizeof path);
 	memset(resolved, 0, sizeof resolved);
 
@@ -55,7 +61,10 @@ main(void)
 
 	/* parse header fields */
 	while (fgets(buf, sizeof buf, stdin) != NULL &&
-	    strcmp(buf, "\r\n") != 0);
+	    strcmp(buf, "\r\n") != 0) {
+		if (strcmp(buf, "Connection: keep-alive\r\n") == 0)
+			connection = KEEP_ALIVE;
+	}
 
 	/* check for default file */
 	if (strcmp(path, "/") == 0)
@@ -74,8 +83,13 @@ main(void)
 	if ((fh = fopen(path, "r")) == NULL)
 		goto bad;
 
+	if (fstat(fileno(fh), &sb) == -1)
+		goto err;
+
 	/* response header */
-	fputs("HTTP/1.1 200 OK\r\n\r\n", stdout);
+	fputs("HTTP/1.1 200 OK\r\n", stdout);
+	printf("Content-Length: %lld\r\n", sb.st_size);
+	fputs("\r\n", stdout);
 
 	while ((n = fread(buf, sizeof *buf, sizeof buf, fh)) > 0)
 		if (fwrite(buf, sizeof *buf, n, stdout) == 0)
@@ -83,6 +97,12 @@ main(void)
 
 	if (fclose(fh) == EOF)
 		return EXIT_FAILURE;
+
+	if (fflush(stdout) == EOF)
+		err(EXIT_FAILURE, "fflush");
+
+	if (connection == KEEP_ALIVE)
+		goto next;
 
 	return EXIT_SUCCESS;
  bad:
