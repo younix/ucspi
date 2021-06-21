@@ -1,3 +1,4 @@
+#!/bin/ksh
 #!/usr/bin/env bash
 
 . ./tap-functions -u
@@ -5,7 +6,6 @@
 plan_tests 32
 
 # prepare
-
 file_grep() {
 	file=$1
 	regex=$2
@@ -15,6 +15,7 @@ file_grep() {
 }
 
 tmpdir=$(mktemp -d tests_XXXXXX)
+touch $tmpdir/tcps.log	# prevent ENOENT in until grep loop later
 
 #########################################################################
 # plain server to client communication					#
