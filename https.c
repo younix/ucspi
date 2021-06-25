@@ -91,6 +91,7 @@ main(void)
 	printf("Content-Length: %lld\r\n", sb.st_size);
 	fputs("\r\n", stdout);
 
+	/* transfer body */
 	while ((n = fread(buf, sizeof *buf, sizeof buf, fh)) > 0)
 		if (fwrite(buf, sizeof *buf, n, stdout) == 0)
 			return EXIT_FAILURE;
