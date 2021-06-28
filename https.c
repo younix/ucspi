@@ -51,6 +51,7 @@ main(void)
 		goto err;
 #endif
  next:
+	connection = CLOSE;
 	memset(host, 0, sizeof host);
 	memset(&sb, 0, sizeof sb);
 	memset(path, 0, sizeof path);
