@@ -36,6 +36,7 @@ main(void)
 	char file[PATH_MAX];
 	char htdocs[PATH_MAX] = "/var/www/htdocs";
 	char resolved[PATH_MAX];
+	char host[HOST_NAME_MAX+1];
 	enum connection { KEEP_ALIVE, CLOSE } connection;
 	struct stat sb;
 	unsigned int major;
@@ -50,6 +51,7 @@ main(void)
 		goto err;
 #endif
  next:
+	memset(host, 0, sizeof host);
 	memset(&sb, 0, sizeof sb);
 	memset(path, 0, sizeof path);
 	memset(resolved, 0, sizeof resolved);
@@ -64,13 +66,15 @@ main(void)
 	    strcmp(buf, "\r\n") != 0) {
 		if (strcmp(buf, "Connection: keep-alive\r\n") == 0)
 			connection = KEEP_ALIVE;
+		if (sscanf(buf, "Host: %" S(HOST_NAME_MAX) "s\r\n", host) == 1)
+			continue;
 	}
 
 	/* check for default file */
 	if (strcmp(path, "/") == 0)
 		strcpy(path, "index.html");
 
-	snprintf(file, sizeof file, "%s/%s", htdocs, path);
+	snprintf(file, sizeof file, "%s/%s/%s", htdocs, host, path);
 	if (realpath(file, path) == NULL) {
 		if (errno == ENOENT)
 			goto not_found;
