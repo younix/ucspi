@@ -27,6 +27,11 @@
 #define S_(x)	#x
 #define S(x)	S_(x)
 
+#define respond(str) do {				\
+	fputs("HTTP/1.1 " str "\r\n\r\n", stdout);	\
+	exit(EXIT_SUCCESS);				\
+} while (0)
+
 int
 main(void)
 {
@@ -46,9 +51,9 @@ main(void)
 
 #ifdef __OpenBSD__
 	if (unveil(htdocs, "r") == -1)
-		goto err;
+		respond("500 Internal Server Error");
 	if (pledge("stdio rpath", NULL) == -1)
-		goto err;
+		respond("500 Internal Server Error");
 #endif
  next:
 	connection = CLOSE;
@@ -60,7 +65,7 @@ main(void)
 	/* parse method */
 	if (scanf("%" S(BUFSIZ) "s %" S(PATH_MAX) "s HTTP/%u.%u\r\n",
 	    method, path, &major, &minor) != 4)
-		goto bad;
+		respond("400 Bad Request");
 
 	/* parse header fields */
 	while (fgets(buf, sizeof buf, stdin) != NULL &&
@@ -78,18 +83,18 @@ main(void)
 	snprintf(file, sizeof file, "%s/%s/%s", htdocs, host, path);
 	if (realpath(file, path) == NULL) {
 		if (errno == ENOENT)
-			goto not_found;
-		goto bad;
+			respond("404 Not Found");
+		respond("400 Bad Request");
 	}
 	/* check that realpath is inside htdocs */
 	if (strncmp(htdocs, file, strlen(htdocs)) != 0)
-		goto bad;
+		respond("400 Bad Request");
 
 	if ((fh = fopen(path, "r")) == NULL)
-		goto bad;
+		respond("400 Bad Request");
 
 	if (fstat(fileno(fh), &sb) == -1)
-		goto err;
+		respond("500 Internal Server Error");
 
 	/* response header */
 	fputs("HTTP/1.1 200 OK\r\n", stdout);
@@ -110,14 +115,5 @@ main(void)
 	if (connection == KEEP_ALIVE)
 		goto next;
 
-	return EXIT_SUCCESS;
- bad:
-	fputs("HTTP/1.1 400 Bad Request\r\n\r\n", stdout);
-	return EXIT_SUCCESS;
- not_found:
-	fputs("HTTP/1.1 404 Not Found\r\n\r\n", stdout);
-	return EXIT_SUCCESS;
- err:
-	fputs("HTTP/1.1 500 Internal Server Error\r\n\r\n", stdout);
 	return EXIT_SUCCESS;
 }
