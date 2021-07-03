@@ -1,5 +1,4 @@
 #!/bin/ksh
-#!/usr/bin/env bash
 
 . ./tap-functions -u
 
