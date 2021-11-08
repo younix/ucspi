@@ -36,9 +36,6 @@
 #define READ_FD 6
 #define WRITE_FD 7
 
-/* enviroment */
-char **environ;
-
 static void
 usage(void)
 {
@@ -49,11 +46,10 @@ usage(void)
 }
 
 int
-main(int argc, char *argv[], char *envp[])
+main(int argc, char *argv[])
 {
 	struct tls *tls = NULL;
 	int ch;
-	environ = envp;
 
 	/* pipes to communicate with the front end */
 	int in = -1;
@@ -253,7 +249,7 @@ main(int argc, char *argv[], char *envp[])
 
 		if (close(pi[PIPE_WRITE]) < 0) err(EXIT_FAILURE, "close");
 		if (close(po_read) < 0) err(EXIT_FAILURE, "close");
-		execvpe(prog, argv, environ);
+		execvp(prog, argv);
 		err(EXIT_FAILURE, "execvpe");
 	default: break;	/* parent */
 	}
