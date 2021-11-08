@@ -37,17 +37,19 @@ main(void)
 {
 	char buf[BUFSIZ];
 	char method[BUFSIZ+1];
-	char path[PATH_MAX+1];
-	char file[PATH_MAX];
-	char htdocs[PATH_MAX] = "/var/www/htdocs";
-	char resolved[PATH_MAX];
-	char host[HOST_NAME_MAX+1];
+	char path[pathconf("/", _PC_PATH_MAX)+1];
+	char file[pathconf("/", _PC_PATH_MAX)+1];
+	char htdocs[pathconf("/", _PC_PATH_MAX)+1];
+	char resolved[pathconf("/", _PC_PATH_MAX)+1];
+	char host[sysconf(_SC_HOST_NAME_MAX)+1];
 	enum connection { KEEP_ALIVE, CLOSE } connection;
 	struct stat sb;
 	unsigned int major;
 	unsigned int minor;
 	size_t n;
 	FILE *fh;
+
+	strcpy(htdocs, "/var/www/htdocs");
 
 #ifdef __OpenBSD__
 	if (unveil(htdocs, "r") == -1)
@@ -72,7 +74,7 @@ main(void)
 	    strcmp(buf, "\r\n") != 0) {
 		if (strcmp(buf, "Connection: keep-alive\r\n") == 0)
 			connection = KEEP_ALIVE;
-		if (sscanf(buf, "Host: %" S(HOST_NAME_MAX) "s\r\n", host) == 1)
+		if (sscanf(buf, "Host: %" S(sysconf(_SC_HOST_NAME_MAX)+1) "s\r\n", host) == 1)
 			continue;
 	}
 
