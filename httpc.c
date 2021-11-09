@@ -26,6 +26,8 @@
 
 #include "http_parser.h"
 
+#include "dprintf.c"
+
 #define READ_FD 6
 #define WRITE_FD 7
 

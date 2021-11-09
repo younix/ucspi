@@ -23,30 +23,10 @@
 
 #include "http_parser.h"
 
+#include "dprintf.c"
+
 #define READ_FD 6
 #define WRITE_FD 7
-
-#ifdef __sun__
-#include <stdarg.h>
-
-void
-dprintf(int fd, const char *fmt, ...)
-{
-	char buf[BUFSIZ];
-	va_list ap;
-	int len;
-
-	va_start(ap, fmt);
-	len = vsnprintf(buf, sizeof buf, fmt, ap);
-	va_end(ap);
-
-	if (len >= (int)sizeof buf)
-		len = sizeof buf;
-
-	if (write(fd, buf, len) == -1)
-		err(EXIT_FAILURE, "write");
-}
-#endif
 
 void
 usage(void)
