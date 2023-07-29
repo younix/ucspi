@@ -42,6 +42,8 @@ expect_env $tmpdir/env.txt "TCPLOCALHOST" "localhost"
 expect_env $tmpdir/env.txt "TCPLOCALPORT" "$SERVER_PORT"
 expect_env $tmpdir/env.txt "PROTO" "TCP"
 
+rm "$tmpdir/env.txt"
+
 #########################################################################
 # plain client to server communication					#
 #########################################################################
@@ -105,6 +107,8 @@ expect_env $tmpdir/env.txt "TCPLOCALHOST" "localhost"
 expect_env $tmpdir/env.txt "TCPLOCALPORT" "$CLIENT_PORT"
 expect_env $tmpdir/env.txt "PROTO" "SSL"
 
+rm "$tmpdir/env.txt"
+
 #########################################################################
 # encrypted server to client communication				#
 #########################################################################
@@ -134,6 +138,8 @@ expect_env $tmpdir/env.txt "TCPLOCALIP" "127.0.0.1"
 expect_env $tmpdir/env.txt "TCPLOCALHOST" "localhost"
 expect_env $tmpdir/env.txt "TCPLOCALPORT" "$SERVER_PORT"
 expect_env $tmpdir/env.txt "PROTO" "SSL"
+
+rm "$tmpdir/env.txt"
 
 # clean up
 rm -rf $tmpdir
