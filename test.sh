@@ -5,12 +5,13 @@
 plan_tests 32
 
 # prepare
-file_grep() {
-	file=$1
-	regex=$2
-
-	grep -q "$regex" $file
-	ok $? "environment variable: \"$regex\""
+expect_env() {
+	file="$1"
+	key="$2"
+	expected="$3"
+	output="$(grep "^$key=" "$file")"
+	test "$key=$expected" = "$output"
+	ok $? "Expected $key to be $expected (found $output)"
 }
 
 tmpdir=$(mktemp -d tests_XXXXXX)
@@ -33,13 +34,13 @@ ok $? "plain connection server -> client"
 kill -9 %1
 
 # server side environment
-file_grep $tmpdir/env.txt "^TCPREMOTEIP=127.0.0.1\$"
-file_grep $tmpdir/env.txt "^TCPREMOTEHOST=localhost\$"
-file_grep $tmpdir/env.txt "^TCPREMOTEPORT=$CLIENT_PORT\$"
-file_grep $tmpdir/env.txt "^TCPLOCALIP=127.0.0.1\$"
-file_grep $tmpdir/env.txt "^TCPLOCALHOST=localhost\$"
-file_grep $tmpdir/env.txt "^TCPLOCALPORT=$SERVER_PORT\$"
-file_grep $tmpdir/env.txt "^PROTO=TCP\$"
+expect_env $tmpdir/env.txt "TCPREMOTEIP" "127.0.0.1"
+expect_env $tmpdir/env.txt "TCPREMOTEHOST" "localhost"
+expect_env $tmpdir/env.txt "TCPREMOTEPORT" "$CLIENT_PORT"
+expect_env $tmpdir/env.txt "TCPLOCALIP" "127.0.0.1"
+expect_env $tmpdir/env.txt "TCPLOCALHOST" "localhost"
+expect_env $tmpdir/env.txt "TCPLOCALPORT" "$SERVER_PORT"
+expect_env $tmpdir/env.txt "PROTO" "TCP"
 
 #########################################################################
 # plain client to server communication					#
@@ -58,13 +59,13 @@ ok $? "plain connection client -> server"
 kill -9 %1
 
 # client side environment
-file_grep $tmpdir/env.txt "^TCPREMOTEIP=127.0.0.1\$"
-file_grep $tmpdir/env.txt "^TCPREMOTEHOST=localhost\$"
-file_grep $tmpdir/env.txt "^TCPREMOTEPORT=$SERVER_PORT\$"
-file_grep $tmpdir/env.txt "^TCPLOCALIP=127.0.0.1\$"
-file_grep $tmpdir/env.txt "^TCPLOCALHOST=localhost\$"
-file_grep $tmpdir/env.txt "^TCPLOCALPORT=$CLIENT_PORT\$"
-file_grep $tmpdir/env.txt "^PROTO=TCP\$"
+expect_env $tmpdir/env.txt "TCPREMOTEIP" "127.0.0.1"
+expect_env $tmpdir/env.txt "TCPREMOTEHOST" "localhost"
+expect_env $tmpdir/env.txt "TCPREMOTEPORT" "$SERVER_PORT"
+expect_env $tmpdir/env.txt "TCPLOCALIP" "127.0.0.1"
+expect_env $tmpdir/env.txt "TCPLOCALHOST" "localhost"
+expect_env $tmpdir/env.txt "TCPLOCALPORT" "$CLIENT_PORT"
+expect_env $tmpdir/env.txt "PROTO" "TCP"
 
 #########################################################################
 # cert checks								#
@@ -96,13 +97,13 @@ ok $? "tls connection client -> server"
 kill -9 %1
 
 # client side environment
-file_grep $tmpdir/env.txt "^TCPREMOTEIP=127.0.0.1\$"
-file_grep $tmpdir/env.txt "^TCPREMOTEHOST=localhost\$"
-file_grep $tmpdir/env.txt "^TCPREMOTEPORT=$SERVER_PORT\$"
-file_grep $tmpdir/env.txt "^TCPLOCALIP=127.0.0.1\$"
-file_grep $tmpdir/env.txt "^TCPLOCALHOST=localhost\$"
-file_grep $tmpdir/env.txt "^TCPLOCALPORT=$CLIENT_PORT\$"
-file_grep $tmpdir/env.txt "^PROTO=SSL\$"
+expect_env $tmpdir/env.txt "TCPREMOTEIP" "127.0.0.1"
+expect_env $tmpdir/env.txt "TCPREMOTEHOST" "localhost"
+expect_env $tmpdir/env.txt "TCPREMOTEPORT" "$SERVER_PORT"
+expect_env $tmpdir/env.txt "TCPLOCALIP" "127.0.0.1"
+expect_env $tmpdir/env.txt "TCPLOCALHOST" "localhost"
+expect_env $tmpdir/env.txt "TCPLOCALPORT" "$CLIENT_PORT"
+expect_env $tmpdir/env.txt "PROTO" "SSL"
 
 #########################################################################
 # encrypted server to client communication				#
@@ -126,13 +127,13 @@ ok $? "tls connection server -> client"
 kill -9 %1
 
 # server side environment
-file_grep $tmpdir/env.txt "^TCPREMOTEIP=127.0.0.1\$"
-file_grep $tmpdir/env.txt "^TCPREMOTEHOST=localhost\$"
-file_grep $tmpdir/env.txt "^TCPREMOTEPORT=$CLIENT_PORT\$"
-file_grep $tmpdir/env.txt "^TCPLOCALIP=127.0.0.1\$"
-file_grep $tmpdir/env.txt "^TCPLOCALHOST=localhost\$"
-file_grep $tmpdir/env.txt "^TCPLOCALPORT=$SERVER_PORT\$"
-file_grep $tmpdir/env.txt "^PROTO=SSL\$"
+expect_env $tmpdir/env.txt "TCPREMOTEIP" "127.0.0.1"
+expect_env $tmpdir/env.txt "TCPREMOTEHOST" "localhost"
+expect_env $tmpdir/env.txt "TCPREMOTEPORT" "$CLIENT_PORT"
+expect_env $tmpdir/env.txt "TCPLOCALIP" "127.0.0.1"
+expect_env $tmpdir/env.txt "TCPLOCALHOST" "localhost"
+expect_env $tmpdir/env.txt "TCPLOCALPORT" "$SERVER_PORT"
+expect_env $tmpdir/env.txt "PROTO" "SSL"
 
 # clean up
 rm -rf $tmpdir
