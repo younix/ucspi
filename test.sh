@@ -22,9 +22,8 @@ touch $tmpdir/tcps.log	# prevent ENOENT in until grep loop later
 ./tcps -d 127.0.0.1 0 /usr/bin/env 2>$tmpdir/tcps.log &
 
 # wait running server
-until grep -q '^listen: 127.0.0.1:' $tmpdir/tcps.log; do :; done
+until grep -q '^listen: 127.0.0.1:' $tmpdir/tcps.log; do printf . && sleep 1; done
 SERVER_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcps.log | head -n 1)
-
 # start client
 ./tcpc -d 127.0.0.1 $SERVER_PORT ./read6.sh $tmpdir/env.txt 2>$tmpdir/tcpc.log
 CLIENT_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcpc.log | head -n 1)
