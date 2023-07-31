@@ -73,7 +73,10 @@ expect_env $tmpdir/env.txt "PROTO" "TCP"
 # cert checks								#
 #########################################################################
 
-# TODO: add a test here
+# These should have been created by 'make test'
+test -f ca.crt && test -f server.crt && test -f server.key && test -f client.crt && test -f client.key
+ok $? "Certificates and keys for running tests exist."
+# TODO: add more tests here
 #h=$(openssl x509 -outform der -in server.crt | sha256)
 #printf "SHA256:${h}\n"
 
@@ -85,7 +88,7 @@ expect_env $tmpdir/env.txt "PROTO" "TCP"
 	./read0.sh "$tmpdir/env.txt" 2>$tmpdir/tcps.log &
 
 # wait running server
-until grep -q '^listen: 127.0.0.1:' $tmpdir/tcps.log; do :; done
+until grep -q '^listen: 127.0.0.1:' $tmpdir/tcps.log; do printf . && sleep 1; done
 SERVER_PORT=$(sed -ne 's/^listen: 127.0.0.1://p' $tmpdir/tcps.log | head -n 1)
 
 ./tcpc -d 127.0.0.1 $SERVER_PORT			\
