@@ -96,7 +96,6 @@ main(int argc, char*argv[])
 	int s;
 	int ch;
 	char *argv0 = argv[0];
-	const char *cause = NULL;
 	bool h_flag = true;
 	bool debug = false;
 
@@ -157,16 +156,13 @@ main(int argc, char*argv[])
 	s = -1;
 	for (res = res0; res; res = res->ai_next) {
 		s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-		if (s == -1) {
-			cause = "socket";
+		if (s == -1)
 			continue;
-		}
 
 		/* set local address information */
 		if (local_addr_str != NULL || local_port_str != NULL)
 			if (set_local_addr(s, res->ai_family, local_addr_str,
 			   local_port_str) == -1) {
-				cause = "bind";
 				save_errno = errno;
 				close(s);
 				errno = save_errno;
@@ -175,7 +171,6 @@ main(int argc, char*argv[])
 			}
 
 		if (connect(s, res->ai_addr, res->ai_addrlen) == -1) {
-			cause = "connect";
 			save_errno = errno;
 			close(s);
 			errno = save_errno;
