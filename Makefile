@@ -8,7 +8,7 @@ LIBS_TLS ?= -ltls `pkg-config --libs libssl`
 .PHONY: all test clean install
 .SUFFIXES: .c .o
 
-all: sockc tlsc tlss httppc httpc https ftpc
+all: sockc tlsc tlss httppc httpc https ftpc tcpc tcps
 
 # HTTP
 httpc.o: http_parser.h
@@ -19,6 +19,13 @@ httpc: httpc.o http_parser.o
 
 httppc: httppc.o http_parser.o
 	$(CC) $(LDFLAGS) -o $@ httppc.o http_parser.o
+
+# TCP
+tcpc: tcpc.o
+	$(CC) $(LDFLAGS) -o tcpc tcpc.o
+
+tcps: tcps.o
+	$(CC) $(LDFLAGS) -o tcps tcps.o
 
 # SSL/TLS
 tlsc: tlsc.o
