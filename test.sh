@@ -2,7 +2,7 @@
 
 . ./tap-functions -u
 
-plan_tests 32
+plan_tests 33
 
 # prepare
 expect_env() {
