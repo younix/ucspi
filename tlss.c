@@ -136,7 +136,7 @@ main(int argc, char *argv[])
 		if (close(pi[PIPE_WRITE]) == -1) err(EXIT_FAILURE, "close");
 
 		execv(prog, argv);
-		err(EXIT_FAILURE, "execve");
+		err(EXIT_FAILURE, "execv: %s", prog);
 	default: break; /* parent */
 	}
 

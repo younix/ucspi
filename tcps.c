@@ -91,7 +91,7 @@ start_prog(struct sock *sock, char *prog, char *argv[])
 
 	/* execute program */
 	execvp(prog, argv);
-	err(EXIT_FAILURE, "execvp()");
+	err(EXIT_FAILURE, "execvp: %s", prog);
 }
 
 static void

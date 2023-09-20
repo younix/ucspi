@@ -239,7 +239,7 @@ main(int argc, char*argv[])
 	if (close(s) == -1) err(EXIT_FAILURE, "close");
 
 	execvp(prog, argv);
-	err(EXIT_FAILURE, "execvp");
+	err(EXIT_FAILURE, "execvp: %s", prog);
  err:
 	perror(argv0);
 	return EXIT_FAILURE;

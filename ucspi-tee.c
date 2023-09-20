@@ -113,7 +113,7 @@ main(int argc, char *argv[], char *envp[])
 		if (close(pi[PIPE_WRITE]) < 0) goto err;
 		if (close(po_read) < 0) goto err;
 		execvpe(prog, argv, environ);
-		err(EXIT_FAILURE, "execvpe()");
+		err(EXIT_FAILURE, "execvpe: %s", prog);
 	default: break;
 	}
 

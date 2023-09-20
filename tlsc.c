@@ -250,7 +250,7 @@ main(int argc, char *argv[])
 		if (close(pi[PIPE_WRITE]) < 0) err(EXIT_FAILURE, "close");
 		if (close(po_read) < 0) err(EXIT_FAILURE, "close");
 		execvp(prog, argv);
-		err(EXIT_FAILURE, "execvpe");
+		err(EXIT_FAILURE, "execvp: %s", prog);
 	default: break;	/* parent */
 	}
 
